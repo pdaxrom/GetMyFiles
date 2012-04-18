@@ -14,12 +14,15 @@
 
 #include "tcp.h"
 
+#define HTTP_TIMEOUT	3
+
 #define BUF_SIZE	1024
 #define KEY_SIZE	16
 
 static const char *SSL_CIPHER_LIST = "ALL:!LOW";
 
-static const char *oops_reply = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><head><title>Oops!</title></head><body><b>This link doesn't exists!</b></body></html>";
+static const char *reply_oops = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><head><title>Oops!</title></head><body><b>This link doesn't exists!</b></body></html>";
+static const char *reply_oops_timeout = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><head><title>Oops!</title></head><body><b>Connection timeout!</b></body></html>";
 
 static SSL_CTX *ctx_http;
 static SSL_CTX *ctx_user;
@@ -29,6 +32,7 @@ typedef struct http_info {
     tcp_channel	*channel;
     SSL		*ssl;
     char	key[KEY_SIZE];
+    int		inactive;
     struct http_info *next;
 } http_info;
 
@@ -246,13 +250,19 @@ static void http_del(http_info *info)
 
 static http_info *http_get(char *key)
 {
+    http_info *ret = NULL;
+    pthread_mutex_lock(&mutex_https);
     http_info *tmp = first_http;
     while (tmp) {
-	if (!memcmp(tmp->key, key, KEY_SIZE))
-	    return tmp;
+	if (!memcmp(tmp->key, key, KEY_SIZE)) {
+	    ret = tmp;
+	    ret->inactive = 0; // disable watchdog for this connection
+	    break;
+	}
 	tmp = tmp->next;
     }
-    return NULL;
+    pthread_mutex_unlock(&mutex_https);
+    return ret;
 }
 
 static void thread_user(void *arg)
@@ -323,7 +333,7 @@ static void thread_http_request(void *arg)
 		    http_add(c);
 		    if (SSL_write(info->ssl, buffer, strlen(buf) + KEY_SIZE) <= 0) {
 			warning("SSL_write()");
-			SSL_write(c->ssl, oops_reply, strlen(oops_reply));
+			SSL_write(c->ssl, reply_oops, strlen(reply_oops));
 			http_del(c);
 			user_del(info);
 			users_dump();
@@ -333,7 +343,7 @@ static void thread_http_request(void *arg)
 			return;
 		    }
 		} else {
-		    SSL_write(c->ssl, oops_reply, strlen(oops_reply));
+		    SSL_write(c->ssl, reply_oops, strlen(reply_oops));
 		}
 	    }
 	} else
@@ -416,6 +426,48 @@ static void generate_key(char *key)
     fclose(f);
 }
 
+static void thread_user_ping(void *argc)
+{
+    while (1) {
+	
+	sleep(5);
+    }
+}
+
+//
+// Remove inactive http connections after timeout
+//
+static void thread_http_cleanup(void *argc)
+{
+    while (1) {
+	pthread_mutex_lock(&mutex_https);
+	http_info *tmp = first_http;
+	http_info *prv;
+	while (tmp) {
+	    if (tmp->inactive)
+		tmp->inactive++;
+	    if (tmp->inactive > HTTP_TIMEOUT) {
+		http_info *tmp1 = tmp;
+		if (tmp == first_http) {
+		    first_http = first_http->next;
+		    tmp = first_http;
+		} else {
+		    prv->next = tmp->next;
+		    tmp = tmp->next;
+		}
+		SSL_write(tmp1->ssl, reply_oops_timeout, strlen(reply_oops_timeout));
+		http_info_free(tmp1);
+		continue;
+	    }
+	    prv = tmp;
+	    tmp = tmp->next;
+	}
+	pthread_mutex_unlock(&mutex_https);
+
+	sleep(5);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     int http_port;
@@ -464,6 +516,9 @@ int main(int argc, char *argv[])
     if (pthread_create(&tid, NULL, (void *) &thread_data, (void *) data) != 0)
 	panic("pthread_create(thread_data)");
 
+    if (pthread_create(&tid, NULL, (void *) &thread_http_cleanup, NULL) != 0)
+	panic("pthread_create(thread_http_cleanup)");
+
     while (1) {
 	SSL *ssl;
 	tcp_channel *client = tcp_accept(http);
@@ -483,6 +538,7 @@ int main(int argc, char *argv[])
 	    http_info *arg = malloc(sizeof(http_info));
 	    arg->channel = client;
 	    arg->ssl = ssl;
+	    arg->inactive = 1;
 	    generate_key(arg->key);
 	    arg->next = NULL;
 
