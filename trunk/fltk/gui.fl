@@ -1,0 +1,98 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0300 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <FL/Fl_Native_File_Chooser.H>} {public global
+} 
+
+decl {int fConnected = 0;} {private local
+} 
+
+decl {int online_client(const char *path);} {public global
+} 
+
+decl {int offline_client(void);} {public global
+} 
+
+Function {make_window()} {open C
+} {
+  Fl_Window {} {
+    label {ItsMyFiles.com} open
+    xywh {835 252 535 110} type Double align 80 size_range {535 110 535 110} visible
+  } {
+    Fl_Button closeButton {
+      label Close
+      callback {exit(0);}
+      xywh {455 80 75 25}
+    }
+    Fl_Output urlText {
+      label URL
+      xywh {55 45 395 25}
+    }
+    Fl_Button browseButton {
+      label Browse
+      callback {Fl_Native_File_Chooser fc;
+	fc.title("Open");
+	fc.type(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
+	switch ( fc.show() ) {
+	case -1: break;	// Error
+	case  1: break; 	// Cancel
+	default:		// Choice
+		fc.preset_file(fc.filename());
+		folderText->value(fc.filename());
+		fprintf(stderr, "open %s\\n", fc.filename());
+		break;
+	}}
+      xywh {455 10 75 25}
+    }
+    Fl_Output folderText {
+      label Folder
+      xywh {55 10 395 25}
+    }
+    Fl_Light_Button connectButton {
+      label Share
+      callback {if (!fConnected) {
+	fConnected = online_client(folderText->value());
+	if (fConnected) {
+		browseButton->deactivate();
+//		shareButton->value(1);
+	}
+} else {
+	fConnected = offline_client();
+	if (!fConnected) {
+		browseButton->activate();
+//		shareButton->value(0);
+		urlText->value("");
+	}
+}} selected
+      xywh {455 45 75 25} selection_color 88
+    }
+  }
+} 
+
+Function {set_online()} {open C
+} {
+  code {fConnected = 1;
+browseButton->deactivate();
+//urlButton->value("Online");
+connectButton->value(1);} {}
+} 
+
+Function {set_offline()} {open C
+} {
+  code {fConnected = 0;
+browseButton->activate();
+//urlButton->value("Online");
+connectButton->value(0);
+urlText->value("");} {}
+} 
+
+Function {show_server_directory(char *dir)} {open C
+} {
+  code {urlText->value(dir);} {}
+} 
+
+Function {show_shared_directory(char *dir)} {open C
+} {
+  code {folderText->value(dir);} {}
+} 
