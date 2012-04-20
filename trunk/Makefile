@@ -1,3 +1,5 @@
+VERSION=0.9
+
 SYSTEM := $(shell uname)
 
 ifneq (mingw32, $(SYSTEM))
@@ -28,7 +30,7 @@ all: $(TARGET_S) $(TARGET_C)
 
 PREFIX = /opt/simple-nx
 
-CFLAGS = -g -Wall -Ilib -DCONFIG_DIR=\".\"
+CFLAGS = -g -Wall -Ilib -DCONFIG_DIR=\".\" -DVERSION=$(VERSION)
 
 ifeq (y,$(DEBUG))
 CFLAGS += -DDEBUG

@@ -291,14 +291,25 @@ static void thread_user(void *arg)
 	else {
 	    if ((r = SSL_read(ssl, (uint8_t *)buf, BUF_SIZE)) > 0) {
 		buf[r] = 0;
-		//fprintf(stderr, "client:[%s] to ", buf);
-		char *name = tempnam("/","share");
-		strcpy(name, name + 1);
-		fprintf(stderr, "New client: [%s]\n", name);
-		sprintf(buf, "URL: %s", name);
-		SSL_write(ssl, buf, strlen(buf));
-		user_add(client, ssl, name);
-		users_dump();
+		float serv_vers = VERSION;
+		float vers = 0;
+		sscanf(buf, "VERSION: %f", &vers);
+		fprintf(stderr, "Client version: %f (server %f)\n", vers, serv_vers);
+		if (vers < serv_vers) {
+		    snprintf(buf, BUF_SIZE, "UPD: %.2f", serv_vers);
+		    SSL_write(ssl, buf, strlen(buf));
+		    SSL_shutdown(ssl);
+		    SSL_free(ssl);
+		    tcp_close(client);
+		} else {
+		    char *name = tempnam("/","share");
+		    strcpy(name, name + 1);
+		    fprintf(stderr, "New client: [%s]\n", name);
+		    sprintf(buf, "URL: %s", name);
+		    SSL_write(ssl, buf, strlen(buf));
+		    user_add(client, ssl, name);
+		    users_dump();
+		}
 	    } else {
 		SSL_shutdown(ssl);
 		SSL_free(ssl);
@@ -342,7 +353,7 @@ static void thread_http_request(void *arg)
 			http_del(c);
 			pthread_mutex_lock(&mutex_users);
 			info->in_use--;
-			if (info->in_use == 0) {
+			if (!info->in_use) {
 			    user_del(info);
 			    users_dump();
 			}
@@ -446,9 +457,38 @@ static void generate_key(char *key)
 static void thread_user_ping(void *argc)
 {
     while (1) {
+	int users = 0;
+	user_info *tmp = first_user;
+	user_info *prv;
+
 	pthread_mutex_lock(&mutex_users);
-	
+
+	while (tmp) {
+	    if (!tmp->in_use) {
+		static char *ping_str = "PING :-O";
+		if (SSL_write(tmp->ssl, ping_str, strlen(ping_str)) != strlen(ping_str)) {
+		    user_info *tmp1 = tmp;
+		    if (tmp == first_user) {
+			first_user = first_user->next;
+			tmp = first_user;
+		    } else {
+			prv->next = tmp->next;
+			tmp = tmp->next;
+		    }
+		    user_info_free(tmp1);
+		    users++;
+		    continue;
+		}
+	    }
+	    prv = tmp;
+	    tmp = tmp->next;
+	}
+
 	pthread_mutex_unlock(&mutex_users);
+
+	if (users)
+	    fprintf(stderr, "Dead clients removed: %d\n", users);
+
 	sleep(5);
     }
 }
@@ -459,9 +499,12 @@ static void thread_user_ping(void *argc)
 static void thread_http_cleanup(void *argc)
 {
     while (1) {
-	pthread_mutex_lock(&mutex_https);
+	int https = 0;
 	http_info *tmp = first_http;
 	http_info *prv;
+
+	pthread_mutex_lock(&mutex_https);
+
 	while (tmp) {
 	    if (tmp->inactive)
 		tmp->inactive++;
@@ -476,12 +519,17 @@ static void thread_http_cleanup(void *argc)
 		}
 		SSL_write(tmp1->ssl, reply_oops_timeout, strlen(reply_oops_timeout));
 		http_info_free(tmp1);
+		https++;
 		continue;
 	    }
 	    prv = tmp;
 	    tmp = tmp->next;
 	}
+
 	pthread_mutex_unlock(&mutex_https);
+
+	if (https)
+	    fprintf(stderr, "Dead http requests removed: %d\n", https);
 
 	sleep(5);
     }
@@ -534,6 +582,9 @@ int main(int argc, char *argv[])
 
     if (pthread_create(&tid, NULL, (void *) &thread_data, (void *) data) != 0)
 	panic("pthread_create(thread_data)");
+
+    if (pthread_create(&tid, NULL, (void *) &thread_user_ping, NULL) != 0)
+	panic("pthread_create(thread_http_cleanup)");
 
     if (pthread_create(&tid, NULL, (void *) &thread_http_cleanup, NULL) != 0)
 	panic("pthread_create(thread_http_cleanup)");
