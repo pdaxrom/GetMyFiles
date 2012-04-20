@@ -532,12 +532,15 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_sock)
 	fprintf(stderr, "SSL_connect()\n");
     } else {
 	char buf[BUF_SIZE];
-	if ((r = SSL_write(ssl, (uint8_t *)dir_root, strlen(dir_root))) <= 0) {
+	snprintf(buf, BUF_SIZE, "VERSION: %f", VERSION);
+	if ((r = SSL_write(ssl, (uint8_t *)buf, strlen(buf))) <= 0) {
 	    fprintf(stderr, "SSL_write()\n");
+	    goto exit1;
 	}
-	if ((r = SSL_read(ssl, (uint8_t *)buf, BUF_SIZE)) <= 0)
+	if ((r = SSL_read(ssl, (uint8_t *)buf, BUF_SIZE)) <= 0) {
 	    fprintf(stderr, "SSL_read()\n");
-	else {
+	    goto exit1;
+	} else {
 	    buf[r] = 0;
 	    if (!strncmp(buf, "URL: ", 5)) {
 		int i = 0;
@@ -549,6 +552,11 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_sock)
 		snprintf(buf, BUF_SIZE, "https://%s:%d%s", host, port - 100, dir_prefix);
 		show_server_directory(buf);
 #endif
+	    } else if (!strncmp(buf, "UPD: ", 5)) {
+		fprintf(stderr, "Update client to version %s or better.\n", buf + 5);
+		goto exit1;
+	    } else {
+		goto exit1;
 	    }
 	}
 
@@ -558,6 +566,12 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_sock)
 		break;
 	    } else {
 		buf[r] = 0;
+		if (r < KEY_SIZE) {
+#ifdef DEBUG
+		    fprintf(stderr, "Recived [%s]\n", buf);
+#endif
+		    continue;
+		}
 #ifdef DEBUG
 		fprintf(stderr, ">> %s\n", buf + KEY_SIZE);
 		for (r = 0; r < 16; r++)
@@ -577,21 +591,23 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_sock)
 			for (; (tmp[i + 4] > ' ') && (i < BUF_SIZE - KEY_SIZE - 1); i++)
 			    arg->path[i] = tmp[i + 4];
 			arg->path[i] = 0;
-		    }
+
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
-		    if (pthread_create(&tid, NULL, (void *) &thread_upload, (void *) arg) != 0) {
+			if (pthread_create(&tid, NULL, (void *) &thread_upload, (void *) arg) != 0) {
 #else
-		    if (_beginthread(thread_upload, 0, (VOID *) arg) == -1) {
+			if (_beginthread(thread_upload, 0, (VOID *) arg) == -1) {
 #endif
-			warning("pthread_create(thread_upload)");
-		    } else
+			    warning("pthread_create(thread_upload)");
+			}
 			continue;
+		    }
 		}
 		free(arg);
 	    }
 	}
     }
 
+ exit1:
     fprintf(stderr, "Exit...\n");
 
     SSL_shutdown(ssl);
