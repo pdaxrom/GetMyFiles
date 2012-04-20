@@ -40,6 +40,7 @@ typedef struct user_info {
     tcp_channel *channel;
     SSL		*ssl;
     char	*name;
+    int		in_use;
     struct user_info *next;
 } user_info;
 
@@ -118,6 +119,7 @@ static void user_add(tcp_channel *client, SSL *ssl, char *name)
     user->channel = client;
     user->ssl = ssl;
     user->name = name;
+    user->in_use = 0;
     user->next = NULL;
 
     pthread_mutex_lock(&mutex_users);
@@ -327,22 +329,34 @@ static void thread_http_request(void *arg)
 #ifdef DEBUG
 		fprintf(stderr, "path: [%s] %d\n", buf + 4, tcp_fd(c->channel));
 #endif
+		pthread_mutex_lock(&mutex_users);
 		if ((info = user_get(buf + 4))) {
+		    info->in_use++;
+		    pthread_mutex_unlock(&mutex_users);
 		    memcpy(buffer, c->key, KEY_SIZE);
 //		    fprintf(stderr, "OKAY!\n");
 		    http_add(c);
-		    if (SSL_write(info->ssl, buffer, strlen(buf) + KEY_SIZE) <= 0) {
+		    if (SSL_write(info->ssl, buffer, strlen(buf) + KEY_SIZE) != strlen(buf) + KEY_SIZE) {
 			warning("SSL_write()");
 			SSL_write(c->ssl, reply_oops, strlen(reply_oops));
 			http_del(c);
-			user_del(info);
-			users_dump();
+			pthread_mutex_lock(&mutex_users);
+			info->in_use--;
+			if (info->in_use == 0) {
+			    user_del(info);
+			    users_dump();
+			}
+			pthread_mutex_unlock(&mutex_users);
 			return;
 		    } else {
 //			fprintf(stderr, "OKAY2\n");
+			pthread_mutex_lock(&mutex_users);
+			info->in_use--;
+			pthread_mutex_unlock(&mutex_users);
 			return;
 		    }
 		} else {
+		    pthread_mutex_unlock(&mutex_users);
 		    SSL_write(c->ssl, reply_oops, strlen(reply_oops));
 		}
 	    }
@@ -426,10 +440,15 @@ static void generate_key(char *key)
     fclose(f);
 }
 
+//
+// Remove inactive clients
+//
 static void thread_user_ping(void *argc)
 {
     while (1) {
+	pthread_mutex_lock(&mutex_users);
 	
+	pthread_mutex_unlock(&mutex_users);
 	sleep(5);
     }
 }
