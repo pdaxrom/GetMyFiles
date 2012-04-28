@@ -5,6 +5,15 @@
 #include <windows.h>
 #include <process.h>
 #endif
+#if !defined(_WIN32) && !defined(__APPLE__)
+#include <FL/x.H>
+#include <X11/xpm.h>
+#include "icon/icon.xpm"
+#endif
+#if defined(_WIN32)
+#include <FL/x.H>
+#include "resource.h"
+#endif
 #include "client.h"
 
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
@@ -71,6 +80,18 @@ int main(int argc, char *argv[])
 	show_shared_directory(argv[1]);
 	online_client(argv[1]);
     }
+#endif
+
+#if !defined(_WIN32) && !defined(__APPLE__)
+    fl_open_display();
+
+    Pixmap p, mask;
+    XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), icon_xpm, &p, &mask, NULL);
+
+    w->icon((char *)p);
+#endif
+#if defined(_WIN32)
+    w->icon((char *)LoadIcon(fl_display, MAKEINTRESOURCE(IDI_ICON)));
 #endif
 
     w->show();
