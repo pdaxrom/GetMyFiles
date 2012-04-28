@@ -75,7 +75,7 @@ int offline_client(void)
 
 void update_client(char *vers)
 {
-    snprintf(infoText, sizeof(infoText), "Update client to version %s or better", vers);
+    snprintf(infoText, sizeof(infoText), "Please update this client to version %s or better!", vers);
     infoStr->label(infoText);
 #ifdef _WIN32
     fl_message(infoText);
