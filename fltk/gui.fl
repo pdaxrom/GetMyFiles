@@ -21,7 +21,7 @@ Function {make_window()} {open C
     xywh {835 252 535 110} type Double align 80 size_range {535 110 535 110} visible
   } {
     Fl_Button closeButton {
-      label Close
+      label Quit
       callback {exit(0);}
       xywh {455 80 75 25}
     }
@@ -64,8 +64,12 @@ Function {make_window()} {open C
 //		shareButton->value(0);
 		urlText->value("");
 	}
-}} selected
+}}
       xywh {455 45 75 25} selection_color 88
+    }
+    Fl_Box infoStr {
+      label {ItsMyFile client} selected
+      xywh {5 80 445 25}
     }
   }
 } 

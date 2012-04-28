@@ -14,7 +14,10 @@
 #include <FL/x.H>
 #include "resource.h"
 #endif
+#include <FL/fl_ask.H>
 #include "client.h"
+
+char infoText[128];
 
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
 pthread_t tid;
@@ -70,10 +73,23 @@ int offline_client(void)
     return 0;
 }
 
+void update_client(char *vers)
+{
+#if !defined(_WIN32) && !defined(__APPLE__)
+    snprintf(infoText, sizeof(infoText), "Update client to version %.02f or better", VERSION);
+    infoStr->label(infoText);
+#else
+    fl_message("Update client to version %s or better.", vers);
+#endif
+}
+
 int main(int argc, char *argv[])
 {
     Fl_Double_Window *w = make_window();
 //    w->show(argc, argv);
+
+    snprintf(infoText, sizeof(infoText), "ItsMyFiles.com client version %.02f", VERSION);
+    infoStr->label(infoText);
 
 #ifndef __APPLE__
     if (argc > 1) {
