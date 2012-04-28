@@ -1,4 +1,4 @@
-VERSION		:= 0.9
+VERSION		:= 0.8
 SYSTEM		:= $(shell uname)
 
 ifneq (mingw32, $(SYSTEM))
@@ -51,6 +51,10 @@ clean:
 package: all
 ifeq (Darwin, $(SYSTEM))
 	install -m 755 $(TARGET) itsmyfiles.app/Contents/MacOS/$(TARGET)
+	rm -rf /tmp/itsmyfiles.app
+	cp -R itsmyfiles.app /tmp/
+	find /tmp/itsmyfiles.app -name ".svn" | xargs rm -rf -
+	cd /tmp && zip -r9 itsmyfiles-$(VERSION)-osx.zip itsmyfiles.app
 endif
 
 .SUFFIXES: .cxx .h .fl .o .rc .res $(EXEEXT)

@@ -75,11 +75,11 @@ int offline_client(void)
 
 void update_client(char *vers)
 {
-#if !defined(_WIN32) && !defined(__APPLE__)
     snprintf(infoText, sizeof(infoText), "Update client to version %.02f or better", VERSION);
     infoStr->label(infoText);
-#else
-    fl_message("Update client to version %s or better.", vers);
+    fprintf(stderr, "[%s]\n", infoText);
+#ifdef _WIN32
+    fl_message(infoText);
 #endif
 }
 
