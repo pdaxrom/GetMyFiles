@@ -32,7 +32,7 @@
 	<string>FLSU</string>
 
 	<key>CFBundleIconFile</key>
-	<string>sudoku.icns</string>
+	<string>itsmyfiles.icns</string>
 
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
