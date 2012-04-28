@@ -15,6 +15,8 @@ extern Fl_Button *browseButton;
 extern Fl_Output *folderText;
 #include <FL/Fl_Light_Button.H>
 extern Fl_Light_Button *connectButton;
+#include <FL/Fl_Box.H>
+extern Fl_Box *infoStr;
 extern "C" { Fl_Double_Window* make_window(); }
 extern "C" { void set_online(); }
 extern "C" { void set_offline(); }

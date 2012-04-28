@@ -49,12 +49,14 @@ static void cb_connectButton(Fl_Light_Button*, void*) {
 };
 }
 
+Fl_Box *infoStr=(Fl_Box *)0;
+
 Fl_Double_Window* make_window() {
   Fl_Double_Window* w;
   { Fl_Double_Window* o = new Fl_Double_Window(535, 110, "ItsMyFiles.com");
     w = o;
     o->align(Fl_Align(FL_ALIGN_CLIP|FL_ALIGN_INSIDE));
-    { closeButton = new Fl_Button(455, 80, 75, 25, "Close");
+    { closeButton = new Fl_Button(455, 80, 75, 25, "Quit");
       closeButton->callback((Fl_Callback*)cb_closeButton);
     } // Fl_Button* closeButton
     { urlText = new Fl_Output(55, 45, 395, 25, "URL");
@@ -68,6 +70,8 @@ Fl_Double_Window* make_window() {
       connectButton->selection_color(FL_RED);
       connectButton->callback((Fl_Callback*)cb_connectButton);
     } // Fl_Light_Button* connectButton
+    { infoStr = new Fl_Box(5, 80, 445, 25, "ItsMyFile client");
+    } // Fl_Box* infoStr
     o->size_range(535, 110, 535, 110);
     o->end();
   } // Fl_Double_Window* o
