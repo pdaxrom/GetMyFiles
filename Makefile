@@ -17,7 +17,7 @@ TARGET_S =
 
 TARGET_C = itsmyfiles-client.exe
 
-CC = i386-mingw32-gcc
+CC = i686-mingw32-gcc
 
 LIBS = -g -lssl -lcrypto -lz -lwsock32 -lgdi32
 endif

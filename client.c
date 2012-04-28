@@ -554,6 +554,9 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_sock)
 #endif
 	    } else if (!strncmp(buf, "UPD: ", 5)) {
 		fprintf(stderr, "Update client to version %s or better.\n", buf + 5);
+#ifdef CLIENT_GUI
+		update_client(buf + 5);
+#endif
 		goto exit1;
 	    } else {
 		goto exit1;
