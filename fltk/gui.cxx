@@ -53,7 +53,7 @@ Fl_Box *infoStr=(Fl_Box *)0;
 
 Fl_Double_Window* make_window() {
   Fl_Double_Window* w;
-  { Fl_Double_Window* o = new Fl_Double_Window(535, 110, "ItsMyFiles.com");
+  { Fl_Double_Window* o = new Fl_Double_Window(535, 110, "GetMyFil.es");
     w = o;
     o->align(Fl_Align(FL_ALIGN_CLIP|FL_ALIGN_INSIDE));
     { closeButton = new Fl_Button(455, 80, 75, 25, "Quit");

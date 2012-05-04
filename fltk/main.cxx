@@ -31,7 +31,7 @@ static void *thread_client(void *arg)
 static void thread_client(void *arg)
 #endif
 {
-    char *host = "itsmyfiles.com";
+    char *host = "getmyfil.es";
     int port = 8100;
 
     set_online();
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     Fl_Double_Window *w = make_window();
 //    w->show(argc, argv);
 
-    snprintf(infoText, sizeof(infoText), "ItsMyFiles.com client version %.02f", VERSION);
+    snprintf(infoText, sizeof(infoText), "GetMyFil.es client version %.02f", VERSION);
     infoStr->label(infoText);
 
 #ifndef __APPLE__
