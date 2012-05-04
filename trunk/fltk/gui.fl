@@ -17,7 +17,7 @@ decl {int offline_client(void);} {public global
 Function {make_window()} {open C
 } {
   Fl_Window {} {
-    label {ItsMyFiles.com} open
+    label {GetMyFil.es} open
     xywh {835 252 535 110} type Double align 80 size_range {535 110 535 110} visible
   } {
     Fl_Button closeButton {

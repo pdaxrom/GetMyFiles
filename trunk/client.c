@@ -68,7 +68,7 @@ static const char *tmpl_dir_footer =
 "</tbody>"
 "</table>"
 "</div>"
-"<div class=\"foot\">Powered by ItsMyFiles</div>"
+"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
 "</body>"
 "</html>";
 
@@ -654,7 +654,7 @@ int main(int argc, char *argv[])
 	return 1;
     }
 
-    host = "itsmyfiles.com";
+    host = "getmyfil.es";
     port = 8100;
     dir_root = argv[1];
 #endif

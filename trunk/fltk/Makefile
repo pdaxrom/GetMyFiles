@@ -29,7 +29,7 @@ FLTKCONFIG	= fltk-config
 CXXFLAGS	= $(CFLAGS) $(shell $(FLTKCONFIG) --cxxflags)
 LINKFLTK	= $(LIBS) $(shell $(FLTKCONFIG) --ldstaticflags)
 
-TARGET = itsmyfiles$(EXEEXT)
+TARGET = getmyfiles$(EXEEXT)
 
 all: $(TARGET)
 
@@ -46,15 +46,15 @@ $(TARGET): $(OBJS_G) $(OBJS_C) $(OBJS_L) $(OBJS_R)
 
 # clean everything
 clean:
-	rm -f $(OBJS_G) $(OBJS_C) $(OBJS_L) $(OBJS_R) $(TARGET) itsmyfiles.app/Contents/MacOS/$(TARGET)
+	rm -f $(OBJS_G) $(OBJS_C) $(OBJS_L) $(OBJS_R) $(TARGET) getmyfiles.app/Contents/MacOS/$(TARGET)
 
 package: all
 ifeq (Darwin, $(SYSTEM))
-	install -m 755 $(TARGET) itsmyfiles.app/Contents/MacOS/$(TARGET)
-	rm -rf /tmp/itsmyfiles.app
-	cp -R itsmyfiles.app /tmp/
-	find /tmp/itsmyfiles.app -name ".svn" | xargs rm -rf -
-	cd /tmp && zip -r9 itsmyfiles-$(VERSION)-osx.zip itsmyfiles.app
+	install -m 755 $(TARGET) getmyfiles.app/Contents/MacOS/$(TARGET)
+	rm -rf /tmp/getmyfiles.app
+	cp -R getmyfiles.app /tmp/
+	find /tmp/getmyfiles.app -name ".svn" | xargs rm -rf -
+	cd /tmp && zip -r9 getmyfiles-$(VERSION)-osx.zip getmyfiles.app
 endif
 
 .SUFFIXES: .cxx .h .fl .o .rc .res $(EXEEXT)

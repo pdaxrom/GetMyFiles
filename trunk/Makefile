@@ -3,9 +3,9 @@ VERSION=0.9
 SYSTEM := $(shell uname)
 
 ifneq (mingw32, $(SYSTEM))
-TARGET_S = itsmyfiles-server
+TARGET_S = getmyfiles-server
 
-TARGET_C = itsmyfiles-client
+TARGET_C = getmyfiles-client
 
 LIBS = -g -lssl -lpthread
 
@@ -15,7 +15,7 @@ endif
 else
 TARGET_S =
 
-TARGET_C = itsmyfiles-client.exe
+TARGET_C = getmyfiles-client.exe
 
 CC = i686-mingw32-gcc
 
