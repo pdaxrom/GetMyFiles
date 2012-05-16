@@ -35,5 +35,17 @@ int send_404(SSL *ssl, char *url)
 {
     char buf[BUF_SIZE];
     snprintf(buf, sizeof(buf), tmpl_404, url);
+#ifdef SOFT_404
     return send_data(ssl, "text/html", buf, strlen(buf));
+#else
+    char *resp = "HTTP/1.1 404 Not Found\nContent-Type: text/html; charset=UTF-8\nConnection: close\n\n";
+
+    if (SSL_write(ssl, resp, strlen(resp)) != strlen(resp))
+	return -1;
+
+    if (SSL_write(ssl, buf, strlen(buf)) != strlen(buf))
+	return -1;
+
+    return 0;
+#endif
 }
