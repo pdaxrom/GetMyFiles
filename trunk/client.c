@@ -20,6 +20,8 @@
 
 #include "tcp.h"
 #include "urldecode.h"
+#include "utils.h"
+#include "http.h"
 
 #ifdef CLIENT_GUI
 #include <client.h>
@@ -73,8 +75,6 @@ static const char *tmpl_dir_footer =
 "</body>"
 "</html>";
 
-static const char *tmpl_404 = "<html><head><title>404 Not Found</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /></head><body><b>Oops!</b><br /><br />The requested URL %s was not found :(</body></html>";
-
 typedef struct upload_info {
     tcp_channel		*channel;
     SSL			*ssl;
@@ -84,132 +84,6 @@ typedef struct upload_info {
 
 static char *dir_root;
 static char dir_prefix[512];
-
-#ifndef __APPLE__
-#define _realpath realpath
-#endif
-
-#ifdef __APPLE__
-char *_realpath(char *path, char *resolved)
-{
-    char *ret;
-    char *_ret;
-
-    if (!resolved)
-	ret = malloc(PATH_MAX);
-    else
-	ret = resolved;
-
-    if (!(_ret = realpath(path, ret))) {
-	if (!resolved)
-	    free(ret);
-    } else {
-	if (ret[strlen(ret) - 1] == '\\')
-	    ret[strlen(ret) - 1] = 0;
-    }
-
-    return _ret;
-}
-#endif
-
-#ifdef _WIN32
-char *realpath(char *path, char *resolved)
-{
-    char *ret;
-    char *_ret;
-
-    if (!resolved)
-	ret = malloc(_MAX_PATH);
-    else
-	ret = resolved;
-
-    if (!(_ret = _fullpath(ret, path, _MAX_PATH))) {
-	if (!resolved)
-	    free(ret);
-    } else {
-	if (ret[strlen(ret) - 1] == '\\')
-	    ret[strlen(ret) - 1] = 0;
-    }
-
-    return _ret;
-}
-
-BOOL Unicode16ToUtf8(WCHAR *in_Src, CHAR *out_Dst, INT in_MaxLen)
-{
-    INT  lv_Len;
-    if (in_MaxLen <= 0)
-	return FALSE;
-
-    lv_Len = WideCharToMultiByte(CP_UTF8, 0, in_Src, -1, out_Dst, in_MaxLen, 0, 0);
-
-    if (lv_Len < 0)
-	lv_Len = 0;
-
-    if (lv_Len < in_MaxLen)
-	out_Dst[lv_Len] = 0;
-    else if (out_Dst[in_MaxLen-1])
-	out_Dst[0] = 0;
-
-    return TRUE;
-}
-
-BOOL Utf8ToUnicode16(CHAR *in_Src, WCHAR *out_Dst, INT in_MaxLen)
-{
-    INT lv_Len;
-    if (in_MaxLen <= 0)
-	return FALSE;
-
-    lv_Len = MultiByteToWideChar(CP_UTF8, 0, in_Src, -1, out_Dst, in_MaxLen);
-
-    if (lv_Len < 0)
-	lv_Len = 0;
-
-    if (lv_Len < in_MaxLen)
-	out_Dst[lv_Len] = 0;
-    else if (out_Dst[in_MaxLen-1])
-	out_Dst[0] = 0;
-
-    return TRUE;
-}
-
-BOOL Unicode16ToACP(WCHAR *in_Src, CHAR *out_Dst, INT in_MaxLen)
-{
-    INT  lv_Len;
-    if (in_MaxLen <= 0)
-	return FALSE;
-
-    lv_Len = WideCharToMultiByte(CP_ACP, 0, in_Src, -1, out_Dst, in_MaxLen, 0, 0);
-
-    if (lv_Len < 0)
-	lv_Len = 0;
-
-    if (lv_Len < in_MaxLen)
-	out_Dst[lv_Len] = 0;
-    else if (out_Dst[in_MaxLen-1])
-	out_Dst[0] = 0;
-
-    return TRUE;
-}
-
-BOOL ACPToUnicode16(CHAR *in_Src, WCHAR *out_Dst, INT in_MaxLen)
-{
-    INT lv_Len;
-    if (in_MaxLen <= 0)
-	return FALSE;
-
-    lv_Len = MultiByteToWideChar(CP_ACP, 0, in_Src, -1, out_Dst, in_MaxLen);
-
-    if (lv_Len < 0)
-	lv_Len = 0;
-
-    if (lv_Len < in_MaxLen)
-	out_Dst[lv_Len] = 0;
-    else if (out_Dst[in_MaxLen-1])
-	out_Dst[0] = 0;
-
-    return TRUE;
-}
-#endif
 
 static void warning(char *str)
 {
@@ -239,51 +113,6 @@ static SSL_CTX *ssl_initialize(void)
 static void ssl_tear_down(SSL_CTX *ctx)
 {
 	SSL_CTX_free(ctx);
-}
-
-static char *remove_slashes(char *str)
-{
-    int i;
-
-    for (i = 0; i < strlen(str) && str[i] != 0; i++) {
-	while ((str[i] == '/') && (str[i + 1] == '/'))
-	    memcpy(str + i, str + i + 1, strlen(str + i + 1) + 1);
-    }
-    if (str[i - 1] == '/')
-	str[i - 1] = 0;
-
-    return str;
-}
-
-static int send_header(SSL *ssl, char *mime, int use_len, size_t len)
-{
-    char *buf = alloca(BUF_SIZE);
-    if (use_len)
-	snprintf(buf, BUF_SIZE, "HTTP/1.1 200 OK\nContent-Type: %s\nContent-Length: %ld\n\n", mime, len);
-    else
-	snprintf(buf, BUF_SIZE, "HTTP/1.1 200 OK\nContent-Type: %s\n\n", mime);
-
-    if (SSL_write(ssl, buf, strlen(buf)) != strlen(buf))
-	return -1;
-    return 0;
-}
-
-static int send_data(SSL *ssl, char *mime, char *data, size_t len)
-{
-    if (send_header(ssl, mime, 1, len))
-	return -1;
-
-    if (SSL_write(ssl, data, len) != len)
-	return -1;
-
-    return 0;
-}
-
-static int send_404(SSL *ssl, char *url)
-{
-    char *buf = alloca(BUF_SIZE);
-    snprintf(buf, BUF_SIZE, tmpl_404, url);
-    return send_data(ssl, "text/html", buf, strlen(buf));
 }
 
 static char *file_size(char *ret, int s, size_t size)
