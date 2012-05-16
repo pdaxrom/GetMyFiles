@@ -6,6 +6,8 @@
 #include "utils.h"
 
 #ifdef __APPLE__
+#include <stdlib.h>
+
 char *_realpath(char *path, char *resolved)
 {
     char *ret;
