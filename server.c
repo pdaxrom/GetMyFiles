@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
 #ifndef _WIN32
@@ -11,13 +13,22 @@
 #include <openssl/ssl.h>
 #include <pthread.h>
 #include <signal.h>
+#include <limits.h>
 
 #include "tcp.h"
+#include "utils.h"
+#include "http.h"
 
 #define HTTP_TIMEOUT	3
 
 #define BUF_SIZE	1024
 #define KEY_SIZE	16
+
+#ifndef WWWROOT
+#define WWWROOT		"/var/lib/getmyfiles/htdocs"
+#endif
+
+static char *dir_root = WWWROOT;
 
 static const char *SSL_CIPHER_LIST = "ALL:!LOW";
 
@@ -117,8 +128,6 @@ static void user_add(tcp_channel *client, SSL *ssl, char *name)
     user->in_use = 0;
     user->next = NULL;
 
-    pthread_mutex_lock(&mutex_users);
-
     if (first_user == NULL) {
 	first_user = user;
     } else {
@@ -128,8 +137,6 @@ static void user_add(tcp_channel *client, SSL *ssl, char *name)
 	}
 	tmp->next = user;
     }
-
-    pthread_mutex_unlock(&mutex_users);
 }
 
 static void user_info_free(user_info *info)
@@ -143,8 +150,6 @@ static void user_info_free(user_info *info)
 
 static void user_del(user_info *info)
 {
-    pthread_mutex_lock(&mutex_users);
-
     user_info *tmp = first_user;
     user_info *prv;
     while (tmp) {
@@ -160,8 +165,6 @@ static void user_del(user_info *info)
 	prv = tmp;
 	tmp = tmp->next;
     }
-
-    pthread_mutex_unlock(&mutex_users);
 }
 
 static void users_dump(void)
@@ -289,18 +292,21 @@ static void thread_user(void *arg)
 		float serv_vers = VERSION;
 		float vers = 0;
 		sscanf(buf, "VERSION: %f", &vers);
-		fprintf(stderr, "Client version: %f (server %f)\n", vers, serv_vers);
+		dprintf("Client version: %f (server %f)\n", vers, serv_vers);
 		if (vers < serv_vers) {
+		    fprintf(stderr, "Reject client version: %f (need %f or better)\n", vers, serv_vers);
 		    snprintf(buf, BUF_SIZE, "UPD: %.2f", serv_vers);
 		    SSL_write(ssl, buf, strlen(buf));
 		} else {
 		    char *name = tempnam("/","share");
 		    strcpy(name, name + 1);
-		    fprintf(stderr, "New client: [%s]\n", name);
+		    dprintf("New client: [%s]\n", name);
 		    sprintf(buf, "URL: %s", name);
 		    if (SSL_write(ssl, buf, strlen(buf)) == strlen(buf)) {
+			pthread_mutex_lock(&mutex_users);
 			user_add(client, ssl, name);
 			users_dump();
+			pthread_mutex_unlock(&mutex_users);
 			continue;
 		    } else {
 			fprintf(stderr, "%s SSL_write()\n", __FUNCTION__);
@@ -325,16 +331,12 @@ static void thread_http_request(void *arg)
 	if (r < 2)
 	    r = SSL_read(c->ssl, (uint8_t *)buf + r, BUF_SIZE - r);
 	buf[r] = 0;
-#ifdef DEBUG
-	fprintf(stderr, "buf[%d]=%s\n", r, buf);
-#endif
+	dprintf("buf[%d]=%s\n", r, buf);
 	if (!strncmp(buf, "GET ", 4)) {
 	    char *ptr = strchr(buf + 4, ' ');
 	    if (ptr) {
 		user_info *info;
-#ifdef DEBUG
-		fprintf(stderr, "path: [%s] %d\n", buf + 4, tcp_fd(c->channel));
-#endif
+		dprintf("path: [%s] %d\n", buf + 4, tcp_fd(c->channel));
 		pthread_mutex_lock(&mutex_users);
 		if ((info = user_get(buf + 4))) {
 		    info->in_use++;
@@ -362,8 +364,38 @@ static void thread_http_request(void *arg)
 			return;
 		    }
 		} else {
+		    char path[PATH_MAX];
 		    pthread_mutex_unlock(&mutex_users);
-		    SSL_write(c->ssl, reply_oops, strlen(reply_oops));
+		    char *ptr = strchr(buf + 4, ' ');
+		    if (ptr)
+			*ptr = 0;
+		    remove_slashes(buf + 4);
+		    snprintf(path, sizeof(path), "%s/%s", dir_root, buf + 4);
+		    dprintf("%s path [%s]\n", __FUNCTION__, path);
+		    char *normal_path = _realpath(path, NULL);
+		    dprintf("%s normal_path [%s]\n", __FUNCTION__, normal_path);
+		    if (!normal_path)
+			send_404(c->ssl, buf + 4);
+		    else if (!strncmp(normal_path, dir_root, strlen(dir_root))) {
+			struct stat sb;
+			if ((stat(normal_path, &sb) != -1) &&
+			    ((sb.st_mode & S_IFMT) != S_IFDIR)) {
+			    FILE *f = fopen(normal_path, "rb");
+			    if (f) {
+				int r;
+				send_header(c->ssl, "application/octet-stream", 1, sb.st_size);
+				while ((r = fread(buf, 1, BUF_SIZE, f)) > 0) {
+				    if (SSL_write(c->ssl, buf, r) != r)
+					break;
+				}
+				fclose(f);
+			    } else
+				send_404(c->ssl, buf + 4);
+			} else
+			    send_404(c->ssl, buf + 4);
+		    } else
+			send_404(c->ssl, buf + 4);
+		    free(normal_path);
 		}
 	    }
 	} else
@@ -550,6 +582,7 @@ int main(int argc, char *argv[])
     fprintf(stderr, "HTTP port %d\n", http_port);
     fprintf(stderr, "USER port %d\n", user_port);
     fprintf(stderr, "DATA port %d\n", data_port);
+    fprintf(stderr, "HTDOCS    %s\n", dir_root);
 
     signal(SIGPIPE, SIG_IGN);
 
@@ -592,7 +625,7 @@ int main(int argc, char *argv[])
 	    continue;
 	}
 
-fprintf(stderr, "%s tcp_accept ok\n", __FUNCTION__);
+	dprintf("%s tcp_accept ok\n", __FUNCTION__);
 
 	if ((ssl = SSL_new(ctx_http)) == NULL)
 		panic("Failed to create SSL connection.");
@@ -609,7 +642,7 @@ fprintf(stderr, "%s tcp_accept ok\n", __FUNCTION__);
 	    generate_key(arg->key);
 	    arg->next = NULL;
 
-fprintf(stderr, "%s ssl_accept ok\n", __FUNCTION__);
+	    dprintf("%s ssl_accept ok\n", __FUNCTION__);
 
 	    if (pthread_create(&tid, NULL, (void *) &thread_http_request, (void *) arg) != 0) {
 		fprintf(stderr, "%s pthread_create(thread_http)\n", __FUNCTION__);
