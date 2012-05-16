@@ -174,10 +174,6 @@ static void thread_upload(void *arg)
 
 	    char *normal_path = _realpath(buf, NULL);
 
-	    int is_root = 0;
-	    if (!strcmp(normal_path, dir_root))
-		is_root = 1;
-
 	    //fprintf(stderr, "Localpath =  %s - %s - %s - %d\n", path, normal_path, dir_root, is_root);
 
 	    fprintf(stderr, "Get: %s\n", normal_path);
@@ -185,6 +181,9 @@ static void thread_upload(void *arg)
 	    if (!normal_path) {
 		send_404(c->ssl, path);
 	    } else if (!strncmp(normal_path, dir_root, strlen(dir_root))) {
+		int is_root = 0;
+		if (!strcmp(normal_path, dir_root))
+		    is_root = 1;
 #ifdef _WIN32
 		if (normal_path[strlen(normal_path) - 1] == '\\')
 		    normal_path[strlen(normal_path) - 1] = 0;
