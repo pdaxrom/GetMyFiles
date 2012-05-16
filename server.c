@@ -56,11 +56,6 @@ static void panic(char *str)
     exit(1);
 }
 
-static void warning(char *str)
-{
-    fprintf(stderr, "WARNING: %s\n", str);
-}
-
 static RSA *ssl_genkey(SSL *ssl_connection, int export, int key_length)
 {
     static RSA *key = NULL;
@@ -277,7 +272,7 @@ static void thread_user(void *arg)
 	SSL *ssl;
 	tcp_channel *client = tcp_accept(server);
 	if (!client) {
-	    fprintf(stderr, "tcp_accept()\n");
+	    fprintf(stderr, "%s tcp_accept()\n", __FUNCTION__);
 	    continue;
 	}
 
@@ -286,9 +281,9 @@ static void thread_user(void *arg)
 
 	SSL_set_fd(ssl, tcp_fd(client));
 
-	if (SSL_accept(ssl) < 0)
-		warning("Unable to accept SSL connection.");
-	else {
+	if (SSL_accept(ssl) < 0) {
+		fprintf(stderr, "%s Unable to accept SSL connection.\n", __FUNCTION__);
+	} else {
 	    if ((r = SSL_read(ssl, (uint8_t *)buf, BUF_SIZE)) > 0) {
 		buf[r] = 0;
 		float serv_vers = VERSION;
@@ -298,24 +293,24 @@ static void thread_user(void *arg)
 		if (vers < serv_vers) {
 		    snprintf(buf, BUF_SIZE, "UPD: %.2f", serv_vers);
 		    SSL_write(ssl, buf, strlen(buf));
-		    SSL_shutdown(ssl);
-		    SSL_free(ssl);
-		    tcp_close(client);
 		} else {
 		    char *name = tempnam("/","share");
 		    strcpy(name, name + 1);
 		    fprintf(stderr, "New client: [%s]\n", name);
 		    sprintf(buf, "URL: %s", name);
-		    SSL_write(ssl, buf, strlen(buf));
-		    user_add(client, ssl, name);
-		    users_dump();
+		    if (SSL_write(ssl, buf, strlen(buf)) == strlen(buf)) {
+			user_add(client, ssl, name);
+			users_dump();
+			continue;
+		    } else {
+			fprintf(stderr, "%s SSL_write()\n", __FUNCTION__);
+		    }
 		}
-	    } else {
-		SSL_shutdown(ssl);
-		SSL_free(ssl);
-		tcp_close(client);
 	    }
 	}
+	SSL_shutdown(ssl);
+	SSL_free(ssl);
+	tcp_close(client);
     }
 }
 
@@ -348,7 +343,7 @@ static void thread_http_request(void *arg)
 //		    fprintf(stderr, "OKAY!\n");
 		    http_add(c);
 		    if (SSL_write(info->ssl, buffer, strlen(buf) + KEY_SIZE) != strlen(buf) + KEY_SIZE) {
-			warning("SSL_write()");
+			fprintf(stderr, "%s SSL_write()\n", __FUNCTION__);
 			SSL_write(c->ssl, reply_oops, strlen(reply_oops));
 			http_del(c);
 			pthread_mutex_lock(&mutex_users);
@@ -372,9 +367,9 @@ static void thread_http_request(void *arg)
 		}
 	    }
 	} else
-	    warning("Unknown request!");
+	    fprintf(stderr, "%s Unknown request!\n", __FUNCTION__);
     } else
-	fprintf(stderr, "SSL_read() %d\n", r);
+	fprintf(stderr, "%s SSL_read() %d\n", __FUNCTION__, r);
 
     SSL_shutdown(c->ssl);
     SSL_free(c->ssl);
@@ -390,16 +385,16 @@ static void thread_redirector(void *arg)
     tcp_channel *client = (tcp_channel *) arg;
 
     if ((ssl = SSL_new(ctx_user)) == NULL) {
-	warning("Failed to create SSL connection.");
+	fprintf(stderr, "%s Failed to create SSL connection.\n", __FUNCTION__);
 	tcp_close(client);
 	return;
     }
 
     SSL_set_fd(ssl, tcp_fd(client));
 
-    if (SSL_accept(ssl) < 0)
-	warning("Unable to accept SSL connection.");
-    else {
+    if (SSL_accept(ssl) < 0) {
+	fprintf(stderr, "%s Unable to accept SSL connection.\n", __FUNCTION__);
+    } else {
 	if ((r = SSL_read(ssl, (uint8_t *)buf, KEY_SIZE)) == KEY_SIZE) {
 	    http_info *info = http_get(buf);
 	    if (info) {
@@ -407,15 +402,15 @@ static void thread_redirector(void *arg)
 		warning("http found");
 #endif
 		while ((r = SSL_read(ssl, (uint8_t *) buf, BUF_SIZE)) > 0) {
-		    if (SSL_write(info->ssl, buf, r) < 0) {
-			warning("SSL_write(info->ssl)");
+		    if (SSL_write(info->ssl, buf, r) != r) {
+			fprintf(stderr, "%s SSL_write(info->ssl)\n", __FUNCTION__);
 			break;
 		    }
 		}
 		http_del(info);
 	    }
 	} else
-	    warning("SSL_read(key)");
+	    fprintf(stderr, "%s SSL_read(key)\n", __FUNCTION__);
     }
     SSL_shutdown(ssl);
     SSL_free(ssl);
@@ -430,11 +425,11 @@ static void thread_data(void *arg)
 	pthread_t tid;
 	tcp_channel *client = tcp_accept(server);
 	if (!client) {
-	    fprintf(stderr, "tcp_accept()\n");
+	    fprintf(stderr, "%s tcp_accept()\n", __FUNCTION__);
 	    continue;
 	}
 	if (pthread_create(&tid, NULL, (void *) &thread_redirector, (void *) client) != 0) {
-	    warning("pthread_create(thread_http)");
+	    fprintf(stderr, "%s pthread_create(thread_http)\n", __FUNCTION__);
 	    tcp_close(client);
 	}
     }
@@ -593,9 +588,11 @@ int main(int argc, char *argv[])
 	SSL *ssl;
 	tcp_channel *client = tcp_accept(http);
 	if (!client) {
-	    fprintf(stderr, "tcp_accept()\n");
+	    fprintf(stderr, "%s tcp_accept()\n", __FUNCTION__);
 	    continue;
 	}
+
+fprintf(stderr, "%s tcp_accept ok\n", __FUNCTION__);
 
 	if ((ssl = SSL_new(ctx_http)) == NULL)
 		panic("Failed to create SSL connection.");
@@ -603,7 +600,7 @@ int main(int argc, char *argv[])
 	SSL_set_fd(ssl, tcp_fd(client));
 
 	if (SSL_accept(ssl) < 0)
-		warning("Unable to accept SSL connection.");
+		fprintf(stderr, "%s Unable to accept SSL connection.\n", __FUNCTION__);
 	else {
 	    http_info *arg = malloc(sizeof(http_info));
 	    arg->channel = client;
@@ -612,8 +609,10 @@ int main(int argc, char *argv[])
 	    generate_key(arg->key);
 	    arg->next = NULL;
 
+fprintf(stderr, "%s ssl_accept ok\n", __FUNCTION__);
+
 	    if (pthread_create(&tid, NULL, (void *) &thread_http_request, (void *) arg) != 0) {
-		warning("pthread_create(thread_http)");
+		fprintf(stderr, "%s pthread_create(thread_http)\n", __FUNCTION__);
 		SSL_shutdown(ssl);
 		SSL_free(ssl);
 		tcp_close(client);
