@@ -42,6 +42,7 @@ static const char *tmpl_dir_header =
 "<head>"
 "<title>Index of %s</title>"
 "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
+"<script type=\"text/javascript\" src=\"/js/player5.js\"></script>"
 "<style type=\"text/css\">"
 "a, a:active {text-decoration: none; color: blue;}"
 "a:visited {color: #48468F;}"
