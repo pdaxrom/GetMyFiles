@@ -10,7 +10,6 @@
 #else
 #include <windows.h>
 #endif
-#include <openssl/ssl.h>
 #include <pthread.h>
 #include <signal.h>
 #include <limits.h>
@@ -30,18 +29,11 @@
 
 static char *dir_root = WWWROOT;
 
-static const char *SSL_CIPHER_LIST = "ALL:!LOW";
-
 static const char *reply_oops = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><head><title>Oops!</title></head><body><b>This link doesn't exists!</b></body></html>";
 static const char *reply_oops_timeout = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><head><title>Oops!</title></head><body><b>Connection timeout!</b></body></html>";
 
-static SSL_CTX *ctx_http;
-static SSL_CTX *ctx_user;
-static SSL_CTX *ctx_data;
-
 typedef struct http_info {
     tcp_channel	*channel;
-    SSL		*ssl;
     char	key[KEY_SIZE];
     int		inactive;
     struct http_info *next;
@@ -49,7 +41,6 @@ typedef struct http_info {
 
 typedef struct user_info {
     tcp_channel *channel;
-    SSL		*ssl;
     char	*name;
     int		in_use;
     struct user_info *next;
@@ -67,63 +58,10 @@ static void panic(char *str)
     exit(1);
 }
 
-static RSA *ssl_genkey(SSL *ssl_connection, int export, int key_length)
-{
-    static RSA *key = NULL;
-
-    if (key == NULL) {
-	if ((key = RSA_generate_key(export ? key_length : 1024, RSA_F4, NULL, NULL)) == NULL)
-	    panic("Failed to generate temporary key.");
-    }
-
-    return key;
-}
-
-static SSL_CTX *ssl_initialize(void)
-{
-    SSL_CTX *ssl_context;
-
-    static char cert_path[FILENAME_MAX + 1];
-
-    /* -1. check if certificate exists */
-    sprintf(cert_path, CONFIG_DIR "/server.pem");
-
-    /* 0. initialize library */
-    SSL_library_init();
-    SSL_load_error_strings();
-
-    /* 1. initialize context */
-    if ((ssl_context = SSL_CTX_new(SSLv3_method())) == NULL)
-	panic("Failed to initialize SSL context.");
-
-    SSL_CTX_set_options(ssl_context, SSL_OP_ALL);
-
-    if (!SSL_CTX_set_cipher_list(ssl_context, SSL_CIPHER_LIST))
-	panic("Failed to set SSL cipher list.");
-
-    /* 2. load certificates */
-    if (!SSL_CTX_use_certificate_chain_file(ssl_context, cert_path))
-	panic("Failed to load certificate.");
-
-    if (!SSL_CTX_use_RSAPrivateKey_file(ssl_context, cert_path, SSL_FILETYPE_PEM))
-	panic("Failed to load private key.");
-
-    if (SSL_CTX_need_tmp_RSA(ssl_context))
-	SSL_CTX_set_tmp_rsa_callback(ssl_context, ssl_genkey);
-
-    return ssl_context;
-}
-
-static void ssl_tear_down(SSL_CTX *ctx)
-{
-	SSL_CTX_free(ctx);
-}
-
-static void user_add(tcp_channel *client, SSL *ssl, char *name)
+static void user_add(tcp_channel *client, char *name)
 {
     user_info *user = malloc(sizeof(user_info));
     user->channel = client;
-    user->ssl = ssl;
     user->name = name;
     user->in_use = 0;
     user->next = NULL;
@@ -141,8 +79,6 @@ static void user_add(tcp_channel *client, SSL *ssl, char *name)
 
 static void user_info_free(user_info *info)
 {
-    SSL_shutdown(info->ssl);
-    SSL_free(info->ssl);
     tcp_close(info->channel);
     free(info->name);
     free(info);
@@ -219,8 +155,6 @@ static void http_add(http_info *info)
 
 static void http_info_free(http_info *info)
 {
-    SSL_shutdown(info->ssl);
-    SSL_free(info->ssl);
     tcp_close(info->channel);
     free(info);
 }
@@ -272,22 +206,12 @@ static void thread_user(void *arg)
 
     while (1) {
 	int r;
-	SSL *ssl;
 	tcp_channel *client = tcp_accept(server);
 	if (!client) {
 	    fprintf(stderr, "%s tcp_accept()\n", __FUNCTION__);
 	    continue;
-	}
-
-	if ((ssl = SSL_new(ctx_user)) == NULL)
-		panic("Failed to create SSL connection.");
-
-	SSL_set_fd(ssl, tcp_fd(client));
-
-	if (SSL_accept(ssl) < 0) {
-		fprintf(stderr, "%s Unable to accept SSL connection.\n", __FUNCTION__);
 	} else {
-	    if ((r = SSL_read(ssl, (uint8_t *)buf, BUF_SIZE)) > 0) {
+	    if ((r = tcp_read(client, buf, sizeof(buf))) > 0) {
 		buf[r] = 0;
 		float serv_vers = VERSION;
 		float vers = 0;
@@ -295,27 +219,25 @@ static void thread_user(void *arg)
 		dprintf("Client version: %f (server %f)\n", vers, serv_vers);
 		if (vers < serv_vers) {
 		    fprintf(stderr, "Reject client version: %f (need %f or better)\n", vers, serv_vers);
-		    snprintf(buf, BUF_SIZE, "UPD: %.2f", serv_vers);
-		    SSL_write(ssl, buf, strlen(buf));
+		    snprintf(buf, sizeof(buf), "UPD: %.2f", serv_vers);
+		    tcp_write(client, buf, strlen(buf));
 		} else {
 		    char *name = tempnam("/","share");
 		    strcpy(name, name + 1);
 		    dprintf("New client: [%s]\n", name);
 		    sprintf(buf, "URL: %s", name);
-		    if (SSL_write(ssl, buf, strlen(buf)) == strlen(buf)) {
+		    if (tcp_write(client, buf, strlen(buf)) == strlen(buf)) {
 			pthread_mutex_lock(&mutex_users);
-			user_add(client, ssl, name);
+			user_add(client, name);
 			users_dump();
 			pthread_mutex_unlock(&mutex_users);
 			continue;
 		    } else {
-			fprintf(stderr, "%s SSL_write()\n", __FUNCTION__);
+			fprintf(stderr, "%s tcp_write()\n", __FUNCTION__);
 		    }
 		}
 	    }
 	}
-	SSL_shutdown(ssl);
-	SSL_free(ssl);
 	tcp_close(client);
     }
 }
@@ -327,9 +249,9 @@ static void thread_http_request(void *arg)
     http_info *c = (http_info *) arg;
     char *buf = buffer + KEY_SIZE;
 
-    if ((r = SSL_read(c->ssl, (uint8_t *)buf, BUF_SIZE)) > 0) {
+    if ((r = tcp_read(c->channel, buf, BUF_SIZE)) > 0) {
 	if (r < 2)
-	    r = SSL_read(c->ssl, (uint8_t *)buf + r, BUF_SIZE - r);
+	    r = tcp_read(c->channel, buf + r, BUF_SIZE - r);
 	buf[r] = 0;
 	dprintf("buf[%d]=%s\n", r, buf);
 	if (!strncmp(buf, "GET ", 4)) {
@@ -344,9 +266,10 @@ static void thread_http_request(void *arg)
 		    memcpy(buffer, c->key, KEY_SIZE);
 //		    fprintf(stderr, "OKAY!\n");
 		    http_add(c);
-		    if (SSL_write(info->ssl, buffer, strlen(buf) + KEY_SIZE) != strlen(buf) + KEY_SIZE) {
-			fprintf(stderr, "%s SSL_write()\n", __FUNCTION__);
-			SSL_write(c->ssl, reply_oops, strlen(reply_oops));
+		    if (tcp_write(info->channel, buffer, strlen(buf) + KEY_SIZE) != strlen(buf) + KEY_SIZE) {
+			fprintf(stderr, "%s tcp_write()\n", __FUNCTION__);
+			tcp_write(c->channel, reply_oops, strlen(reply_oops));
+			//send_404(c->channel, buf + 4);
 			http_del(c);
 			pthread_mutex_lock(&mutex_users);
 			info->in_use--;
@@ -375,7 +298,7 @@ static void thread_http_request(void *arg)
 		    char *normal_path = _realpath(path, NULL);
 		    dprintf("%s normal_path [%s]\n", __FUNCTION__, normal_path);
 		    if (!normal_path)
-			send_404(c->ssl, buf + 4);
+			send_404(c->channel, buf + 4);
 		    else if (!strncmp(normal_path, dir_root, strlen(dir_root))) {
 			struct stat sb;
 			if ((stat(normal_path, &sb) != -1) &&
@@ -383,28 +306,33 @@ static void thread_http_request(void *arg)
 			    FILE *f = fopen(normal_path, "rb");
 			    if (f) {
 				int r;
-				send_header(c->ssl, "application/octet-stream", 1, sb.st_size);
-				while ((r = fread(buf, 1, BUF_SIZE, f)) > 0) {
-				    if (SSL_write(c->ssl, buf, r) != r)
-					break;
-				}
-				fclose(f);
+				char *resp = http_response_begin(200, "OK");
+				http_response_add_content_type(resp, "application/octet-stream");
+				http_response_add_content_length(resp, sb.st_size);
+				http_response_end(resp);
+				if (tcp_write(c->channel, resp, strlen(resp)) == strlen(resp)) {
+				    while ((r = fread(buf, 1, BUF_SIZE, f)) > 0) {
+					if (tcp_write(c->channel, buf, r) != r)
+					    break;
+				    }
+				    fclose(f);
+				} else
+				    fprintf(stderr, "tcp_write(resp)\n");
+				free(resp);
 			    } else
-				send_404(c->ssl, buf + 4);
+				send_404(c->channel, buf + 4);
 			} else
-			    send_404(c->ssl, buf + 4);
+			    send_404(c->channel, buf + 4);
 		    } else
-			send_404(c->ssl, buf + 4);
+			send_404(c->channel, buf + 4);
 		    free(normal_path);
 		}
 	    }
 	} else
 	    fprintf(stderr, "%s Unknown request!\n", __FUNCTION__);
     } else
-	fprintf(stderr, "%s SSL_read() %d\n", __FUNCTION__, r);
+	fprintf(stderr, "%s tcp_read() %d\n", __FUNCTION__, r);
 
-    SSL_shutdown(c->ssl);
-    SSL_free(c->ssl);
     tcp_close(c->channel);
     free(c);
 }
@@ -412,40 +340,26 @@ static void thread_http_request(void *arg)
 static void thread_redirector(void *arg)
 {
     int r;
-    SSL *ssl;
     char buf[BUF_SIZE];
     tcp_channel *client = (tcp_channel *) arg;
 
-    if ((ssl = SSL_new(ctx_user)) == NULL) {
-	fprintf(stderr, "%s Failed to create SSL connection.\n", __FUNCTION__);
-	tcp_close(client);
-	return;
-    }
-
-    SSL_set_fd(ssl, tcp_fd(client));
-
-    if (SSL_accept(ssl) < 0) {
-	fprintf(stderr, "%s Unable to accept SSL connection.\n", __FUNCTION__);
-    } else {
-	if ((r = SSL_read(ssl, (uint8_t *)buf, KEY_SIZE)) == KEY_SIZE) {
-	    http_info *info = http_get(buf);
-	    if (info) {
+    if ((r = tcp_read(client, buf, KEY_SIZE)) == KEY_SIZE) {
+	http_info *info = http_get(buf);
+	if (info) {
 #ifdef DEBUG
-		warning("http found");
+	    fprintf(stderr, "http found\n");
 #endif
-		while ((r = SSL_read(ssl, (uint8_t *) buf, BUF_SIZE)) > 0) {
-		    if (SSL_write(info->ssl, buf, r) != r) {
-			fprintf(stderr, "%s SSL_write(info->ssl)\n", __FUNCTION__);
-			break;
-		    }
+	    while ((r = tcp_read(client, buf, sizeof(buf))) > 0) {
+		if (tcp_write(info->channel, buf, r) != r) {
+		    fprintf(stderr, "%s tcp_write(info->channel)\n", __FUNCTION__);
+		    break;
 		}
-		http_del(info);
 	    }
-	} else
-	    fprintf(stderr, "%s SSL_read(key)\n", __FUNCTION__);
-    }
-    SSL_shutdown(ssl);
-    SSL_free(ssl);
+	    http_del(info);
+	}
+    } else
+	fprintf(stderr, "%s tcp_read(key)\n", __FUNCTION__);
+
     tcp_close(client);
 }
 
@@ -493,7 +407,7 @@ static void thread_user_ping(void *argc)
 	while (tmp) {
 	    if (!tmp->in_use) {
 		static char *ping_str = "PING :-O";
-		if (SSL_write(tmp->ssl, ping_str, strlen(ping_str)) != strlen(ping_str)) {
+		if (tcp_write(tmp->channel, ping_str, strlen(ping_str)) != strlen(ping_str)) {
 		    user_info *tmp1 = tmp;
 		    if (tmp == first_user) {
 			first_user = first_user->next;
@@ -544,7 +458,9 @@ static void thread_http_cleanup(void *argc)
 		    prv->next = tmp->next;
 		    tmp = tmp->next;
 		}
-		SSL_write(tmp1->ssl, reply_oops_timeout, strlen(reply_oops_timeout));
+		
+		tcp_write(tmp1->channel, reply_oops_timeout, strlen(reply_oops_timeout));
+		
 		http_info_free(tmp1);
 		https++;
 		continue;
@@ -586,21 +502,17 @@ int main(int argc, char *argv[])
 
     signal(SIGPIPE, SIG_IGN);
 
-    tcp_channel *http = tcp_open(TCP_SERVER, NULL, http_port);
+    tcp_channel *http = tcp_open(TCP_SSL_SERVER, NULL, http_port);
     if (!http)
 	panic("tcp_open(http_port)");
 
-    tcp_channel *user = tcp_open(TCP_SERVER, NULL, user_port);
+    tcp_channel *user = tcp_open(TCP_SSL_SERVER, NULL, user_port);
     if (!user)
 	panic("tcp_open(user_port)");
 
-    tcp_channel *data = tcp_open(TCP_SERVER, NULL, data_port);
+    tcp_channel *data = tcp_open(TCP_SSL_SERVER, NULL, data_port);
     if (!user)
 	panic("tcp_open(data_port)");
-
-    ctx_http = ssl_initialize();
-    ctx_user = ssl_initialize();
-    ctx_data = ssl_initialize();
 
     pthread_mutex_init(&mutex_users, NULL);
     pthread_mutex_init(&mutex_https, NULL);
@@ -618,7 +530,6 @@ int main(int argc, char *argv[])
 	panic("pthread_create(thread_http_cleanup)");
 
     while (1) {
-	SSL *ssl;
 	tcp_channel *client = tcp_accept(http);
 	if (!client) {
 	    fprintf(stderr, "%s tcp_accept()\n", __FUNCTION__);
@@ -627,27 +538,15 @@ int main(int argc, char *argv[])
 
 	dprintf("%s tcp_accept ok\n", __FUNCTION__);
 
-	if ((ssl = SSL_new(ctx_http)) == NULL)
-		panic("Failed to create SSL connection.");
-
-	SSL_set_fd(ssl, tcp_fd(client));
-
-	if (SSL_accept(ssl) < 0)
-		fprintf(stderr, "%s Unable to accept SSL connection.\n", __FUNCTION__);
-	else {
+	{
 	    http_info *arg = malloc(sizeof(http_info));
 	    arg->channel = client;
-	    arg->ssl = ssl;
 	    arg->inactive = 1;
 	    generate_key(arg->key);
 	    arg->next = NULL;
 
-	    dprintf("%s ssl_accept ok\n", __FUNCTION__);
-
 	    if (pthread_create(&tid, NULL, (void *) &thread_http_request, (void *) arg) != 0) {
 		fprintf(stderr, "%s pthread_create(thread_http)\n", __FUNCTION__);
-		SSL_shutdown(ssl);
-		SSL_free(ssl);
 		tcp_close(client);
 	    }
 	}
@@ -657,10 +556,6 @@ int main(int argc, char *argv[])
     tcp_close(http);
     tcp_close(user);
     tcp_close(data);
-
-    ssl_tear_down(ctx_user);
-    ssl_tear_down(ctx_http);
-    ssl_tear_down(ctx_data);
 
     pthread_mutex_destroy(&mutex_users);
     pthread_mutex_destroy(&mutex_https);

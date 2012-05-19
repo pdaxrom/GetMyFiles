@@ -18,6 +18,12 @@
 
 #include "tcp.h"
 
+#ifndef CONFIG_DIR
+#define CONFIG_DIR	"/etc"
+#endif
+
+static const char *SSL_CIPHER_LIST = "ALL:!LOW";
+
 #ifdef _WIN32
 typedef int socklen_t;
 
@@ -40,6 +46,87 @@ static int winsock_init(void)
 }
 #endif
 
+static RSA *ssl_genkey(SSL *ssl_connection, int export, int key_length)
+{
+    static RSA *key = NULL;
+
+    if (key == NULL) {
+	if ((key = RSA_generate_key(export ? key_length : 1024, RSA_F4, NULL, NULL)) == NULL)
+	    fprintf(stderr, "Failed to generate temporary key.\n");
+    }
+
+    return key;
+}
+
+SSL_CTX *ssl_initialize(void)
+{
+    SSL_CTX *ssl_context;
+
+    static char cert_path[FILENAME_MAX + 1];
+
+    /* -1. check if certificate exists */
+    sprintf(cert_path, CONFIG_DIR "/server.pem");
+
+    /* 0. initialize library */
+    SSL_library_init();
+    SSL_load_error_strings();
+
+    /* 1. initialize context */
+    if ((ssl_context = SSL_CTX_new(SSLv3_method())) == NULL) {
+	fprintf(stderr, "Failed to initialize SSL context.\n");
+	return NULL;
+    }
+
+    SSL_CTX_set_options(ssl_context, SSL_OP_ALL);
+
+    if (!SSL_CTX_set_cipher_list(ssl_context, SSL_CIPHER_LIST)) {
+	fprintf(stderr, "Failed to set SSL cipher list.\n");
+	goto error1;
+    }
+
+    /* 2. load certificates */
+    if (!SSL_CTX_use_certificate_chain_file(ssl_context, cert_path)) {
+	fprintf(stderr, "Failed to load certificate.\n");
+	goto error1;
+    }
+
+    if (!SSL_CTX_use_RSAPrivateKey_file(ssl_context, cert_path, SSL_FILETYPE_PEM)) {
+	fprintf(stderr, "Failed to load private key.\n");
+	goto error1;
+    }
+
+    if (SSL_CTX_need_tmp_RSA(ssl_context))
+	SSL_CTX_set_tmp_rsa_callback(ssl_context, ssl_genkey);
+
+    return ssl_context;
+ error1:
+    SSL_CTX_free(ssl_context);
+    return NULL;
+}
+
+static SSL_CTX *ssl_client_initialize(void)
+{
+    SSL_CTX *ctx;
+    /* Set up the library */
+    SSL_library_init();
+    SSL_load_error_strings();
+    OpenSSL_add_all_algorithms();
+    SSL_METHOD *meth;
+    meth = SSLv3_client_method();
+    ctx = SSL_CTX_new(meth);
+
+    if (!ctx) {
+	ERR_print_errors_fp(stderr);
+    }
+
+    return ctx;
+}
+
+static void ssl_tear_down(SSL_CTX *ctx)
+{
+	SSL_CTX_free(ctx);
+}
+
 tcp_channel *tcp_open(int mode, char *addr, int port)
 {
 #ifdef _WIN32
@@ -48,6 +135,7 @@ tcp_channel *tcp_open(int mode, char *addr, int port)
 #endif
 
     tcp_channel *u = (tcp_channel *)malloc(sizeof(tcp_channel));
+    memset(u, 0, sizeof(u));
 
     u->mode = mode;
 
@@ -57,7 +145,7 @@ tcp_channel *tcp_open(int mode, char *addr, int port)
 	return NULL;
     }
 
-    if (mode == TCP_SERVER) {
+    if ((mode == TCP_SERVER) || (mode == TCP_SSL_SERVER)) {
 #ifndef _WIN32
 	int yes = 1;
 	if(setsockopt(u->s, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
@@ -85,6 +173,10 @@ tcp_channel *tcp_open(int mode, char *addr, int port)
 	    free(u);
 	    return NULL;
 	}
+	
+	if (mode == TCP_SSL_SERVER) {
+	    u->ctx = ssl_initialize();
+	}
     } else {
 	struct hostent *server = gethostbyname(addr);
 	if (server == NULL) {
@@ -104,6 +196,19 @@ tcp_channel *tcp_open(int mode, char *addr, int port)
 	    free(u);
 	    return NULL;
 	}
+
+	if (mode == TCP_SSL_CLIENT) {
+	    u->ctx = ssl_client_initialize();
+	    u->ssl = SSL_new(u->ctx);
+	    SSL_set_fd(u->ssl, u->s);
+	    if (SSL_connect(u->ssl) < 0) {
+		fprintf(stderr, "SSL_connect()\n");
+		SSL_free(u->ssl);
+		ssl_tear_down(u->ctx);
+		free(u);
+		return NULL;
+	    }
+	}
     }
 
     return u;
@@ -111,8 +216,17 @@ tcp_channel *tcp_open(int mode, char *addr, int port)
 
 int tcp_close(tcp_channel *u)
 {
-    if (u->s >=0)
+    if (u->s >= 0) {
+	if ((u->mode == TCP_SSL_CLIENT) || (u->mode == TCP_SSL_SERVER)) {
+	    if (u->mode == TCP_SSL_CLIENT) {
+		SSL_shutdown(u->ssl);
+		SSL_free(u->ssl);
+	    }
+	    if (u->ctx)
+		ssl_tear_down(u->ctx);
+	}
 	closesocket(u->s);
+    }
     free(u);
 /*
 #ifdef _WIN32
@@ -128,7 +242,13 @@ int tcp_close(tcp_channel *u)
 tcp_channel *tcp_accept(tcp_channel *u)
 {
     tcp_channel *n = (tcp_channel *)malloc(sizeof(tcp_channel));
-    n->mode = TCP_CLIENT;
+    memset(n, 0, sizeof(tcp_channel));
+
+    if (u->mode == TCP_SSL_SERVER)
+	n->mode = TCP_SSL_CLIENT;
+    else
+	n->mode = TCP_CLIENT;
+
     socklen_t l = sizeof(struct sockaddr);
     if ((n->s = accept(u->s, (struct sockaddr *)&n->my_addr, &l)) < 0) {
 	fprintf(stderr, "accept()\n");
@@ -136,24 +256,50 @@ tcp_channel *tcp_accept(tcp_channel *u)
 	return NULL;
     }
 
+    if (u->mode == TCP_SSL_SERVER) {
+	if ((n->ssl = SSL_new(u->ctx)) == NULL) {
+	    fprintf(stderr, "Failed to create SSL connection.\n");
+	    free(n);
+	    return NULL;
+	}
+
+	SSL_set_fd(n->ssl, n->s);
+
+	if (SSL_accept(n->ssl) < 0) {
+	    fprintf(stderr, "Unable to accept SSL connection.\n");
+	    ERR_print_errors_fp(stderr);
+	    SSL_free(n->ssl);
+	    free(n);
+	    return NULL;
+	}
+    }
+
     return n;
 }
 
-int tcp_read(tcp_channel *u, uint8_t *buf, size_t len)
+int tcp_read(tcp_channel *u, char *buf, size_t len)
 {
     int r;
 
-    if ((r = recv(u->s, buf, len, 0)) == -1) {
-    	fprintf(stderr, "recvfrom()\n");
+    if ((u->mode == TCP_SSL_CLIENT) || (u->mode == TCP_SSL_SERVER)) {
+	if ((r = SSL_read(u->ssl, buf, len)) < 0)
+	    fprintf(stderr, "SSL_read()\n");
+    } else {
+	if ((r = recv(u->s, buf, len, 0)) == -1)
+	    fprintf(stderr, "recvfrom()\n");
     }
 
     return r;
 }
 
-int tcp_write(tcp_channel *u, uint8_t *buf, size_t len)
+int tcp_write(tcp_channel *u, char *buf, size_t len)
 {
     int r;
-    if ((r = send(u->s, buf, len, 0)) < 0) {
+    if ((u->mode == TCP_SSL_CLIENT) || (u->mode == TCP_SSL_SERVER)) {
+	if ((r = SSL_write(u->ssl, buf, len)) < 0)
+	    fprintf(stderr, "SSL_write()\n");
+    } else {
+	if ((r = send(u->s, buf, len, 0)) < 0)
 	    fprintf(stderr, "sendto()\n");
     }
 
