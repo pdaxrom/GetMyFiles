@@ -24,5 +24,6 @@ BOOL ACPToUnicode16(CHAR *in_Src, WCHAR *out_Dst, INT in_MaxLen);
 #endif
 
 char *remove_slashes(char *str);
+char *get_mimetype(char *file);
 
 #endif

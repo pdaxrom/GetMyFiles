@@ -14,6 +14,7 @@
 
 #include "urldecode.h"
 #include "http.h"
+#include "utils.h"
 
 #define BUF_SIZE 1024
 
@@ -198,6 +199,10 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root)
 			} else
 			    strcpy(ftime, "");
 
+			if ((sb.st_mode & S_IFMT) == S_IFREG) {
+			    ftype = get_mimetype(name);
+			}
+
 			if (!(is_root && name[0] == '.' && name[1] == '.' && name[2] == 0) &&
 			    !(name[0] == '.' && name[1] == 0)) {
 			    snprintf(buf, BUF_SIZE, "<tr><td class=\"n\"><a href=\"%s/%s\">%s</a></td><td class=\"m\">%s</td><td class=\"s\">%s</td><td class=\"t\">%s</td></tr>", url, name, namelist[i]->d_name, ftime, fsize, ftype);
@@ -246,6 +251,10 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root)
 		    } else
 			strcpy(ftime, "");
 
+			if ((sb.st_mode & S_IFMT) == S_IFREG) {
+			    ftype = get_mimetype(name);
+			}
+
 		    if (!(is_root && name[0] == '.' && name[1] == '.' && name[2] == 0) &&
 			!(name[0] == '.' && name[1] == 0)) {
 			snprintf(buf, BUF_SIZE, "<tr><td class=\"n\"><a href=\"%s/%s\">%s</a></td><td class=\"m\">%s</td><td class=\"s\">%s</td><td class=\"t\">%s</td></tr>", c->path, name, szFile1, ftime, fsize, ftype);
@@ -264,7 +273,7 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root)
 	    if (f) {
 		int r;
 		char *resp = http_response_begin(200, "OK");
-		http_response_add_content_type(resp, "application/octet-stream");
+		http_response_add_content_type(resp, get_mimetype(path));
 		http_response_add_content_length(resp, sb.st_size);
 		http_response_end(resp);
 		if (tcp_write(c, resp, strlen(resp)) != strlen(resp)) {

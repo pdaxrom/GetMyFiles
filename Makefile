@@ -48,5 +48,8 @@ $(TARGET_S): $(OBJS_L) $(OBJS_S)
 $(TARGET_C): $(OBJS_L) $(OBJS_C)
 	$(CC) -o $@ $^ $(LIBS)
 
+mime.h:
+	./create-mime.assign.pl > $@
+
 clean:
 	rm -f $(TARGET_S) $(OBJS_S) $(TARGET_C) $(OBJS_C) $(OBJS_L)
