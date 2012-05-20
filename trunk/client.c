@@ -20,6 +20,7 @@
 #include "urldecode.h"
 #include "utils.h"
 #include "http.h"
+#include "httpd.h"
 
 #ifdef CLIENT_GUI
 #include <client.h>
@@ -38,67 +39,32 @@ typedef struct upload_info {
     char		path[1024];
     char		*dir_prefix;
     char		*dir_root;
+    int			*exit_request;
 } upload_info;
 
 static void thread_upload(void *arg)
 {
-    char buf[BUF_SIZE];
     upload_info *c = (upload_info *) arg;
 
-    char *path = url_decode(c->path);
-
-    //fprintf(stderr, "before: %s\n", path);
-    remove_slashes(c->path);
-    remove_slashes(path);
-    //fprintf(stderr, "after: %s\n", path);
-
     if (tcp_write(c->channel, c->key, KEY_SIZE) == KEY_SIZE) {
-	if (!strncmp(c->dir_prefix, path, strlen(c->dir_prefix))) {
-
-#ifdef _WIN32
-	    wchar_t wbuf[BUF_SIZE];
-	    char *_path = alloca(strlen(path));
-	    memset(wbuf, 0, BUF_SIZE * sizeof(wchar_t));
-	    Utf8ToUnicode16(path, wbuf, BUF_SIZE);
-	    Unicode16ToACP(wbuf, _path, BUF_SIZE);
-	    snprintf(buf, sizeof(buf), "%s/%s", c->dir_root, _path + strlen(c->dir_prefix));
-#else
-	    snprintf(buf, sizeof(buf), "%s/%s", c->dir_root, path + strlen(c->dir_prefix));
-#endif
-
-	    char *normal_path = _realpath(buf, NULL);
-
-	    //fprintf(stderr, "Localpath =  %s - %s - %s - %d\n", path, normal_path, dir_root, is_root);
-
-	    fprintf(stderr, "Get: %s\n", normal_path);
-
-	    if (!normal_path) {
-		send_404(c->channel, path);
-	    } else if (!strncmp(normal_path, c->dir_root, strlen(c->dir_root))) {
-		int is_root = 0;
-		if (!strcmp(normal_path, c->dir_root))
-		    is_root = 1;
-#ifdef _WIN32
-		if (normal_path[strlen(normal_path) - 1] == '\\')
-		    normal_path[strlen(normal_path) - 1] = 0;
-#endif
-		process_dir(c->channel, c->path, normal_path, is_root);
-	    } else
-		send_404(c->channel, path);
-	    free(normal_path);
-	} else {
-	    send_404(c->channel, path);
-	}
+	process_page(c->channel, c->path, c->dir_prefix, c->dir_root, c->exit_request);
     } else
 	fprintf(stderr, "tcp_write(c->key)\n");
 
-    free(path);
     tcp_close(c->channel);
     free(c);
 }
 
-int client_connect(char *_host, int _port, char *_root_dir, int *_sock)
+static void thread_httpd(void *arg)
 {
+    if (httpd_main((httpd_args *)arg)) {
+	fprintf(stderr, "can't start http daemon\n");
+    }
+}
+
+int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
+{
+    httpd_args h_args;
     char dir_prefix[PATH_MAX];
     char *host;
     int port;
@@ -121,10 +87,12 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_sock)
 	return 1;
     }
 
-    if (_sock)
-	*_sock = tcp_fd(server);
+    *_exit_request = 0;
 
     {
+#if !defined(_WIN32) || defined(ENABLE_PTHREADS)
+	pthread_t tid;
+#endif
 	char buf[BUF_SIZE];
 	snprintf(buf, sizeof(buf), "VERSION: %f", VERSION);
 	if ((r = tcp_write(server, buf, strlen(buf))) <= 0) {
@@ -157,7 +125,38 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_sock)
 	    }
 	}
 
+	h_args.port = 8000;
+	h_args.root = dir_root;
+	h_args.prefix = dir_prefix;
+#if !defined(_WIN32) || defined(ENABLE_PTHREADS)
+	if (pthread_create(&tid, NULL, (void *) &thread_httpd, (void *) &h_args) != 0) {
+#else
+	if (_beginthread(thread_httpd, 0, (VOID *) &h_args) == -1) {
+#endif
+	    fprintf(stderr, "pthread_create(thread_httpd)\n");
+	}
+
 	while (1) {
+	    fd_set fds;
+	    int res;
+	    struct timeval tv = {0, 500000};
+	    FD_ZERO (&fds);
+	    FD_SET (tcp_fd(server), &fds);
+	    res = select(tcp_fd(server) + 1, &fds, NULL, NULL, &tv);
+	    if (res < 0) {
+		fprintf(stderr, "%s select()\n", __FUNCTION__);
+		break;
+	    }
+
+	    if (*_exit_request)
+		break;
+
+	    if (!res)
+		continue;
+
+	    if (!FD_ISSET(tcp_fd(server), &fds))
+		continue;
+
 	    if ((r = tcp_read(server, buf, sizeof(buf))) <= 0) {
 		fprintf(stderr, "tcp_read()\n");
 		break;
@@ -179,11 +178,9 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_sock)
 		memcpy(arg->key, buf, KEY_SIZE);
 		arg->dir_root = dir_root;
 		arg->dir_prefix = dir_prefix;
+		arg->exit_request = _exit_request;
 		arg->channel = tcp_open(TCP_SSL_CLIENT, host, port + 1);
 		if (arg->channel) {
-#if !defined(_WIN32) || defined(ENABLE_PTHREADS)
-		    pthread_t tid;
-#endif
 		    char *tmp = buf + KEY_SIZE;
 		    if (!strncmp(tmp, "GET ", 4)) {
 			int i = 0;
@@ -209,19 +206,17 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_sock)
  exit1:
     fprintf(stderr, "Exit...\n");
 
+    h_args.exit_request = 1;
+#ifdef _WIN32
+    Sleep(1000);
+#else
+    sleep(1);
+#endif
+
     tcp_close(server);
     free(dir_root);
 
     return 0;
-}
-
-void client_disconnect(int _sock)
-{
-#ifdef _WIN32
-    closesocket(_sock);
-#else
-    close(_sock);
-#endif
 }
 
 #ifndef CLIENT_GUI
@@ -230,6 +225,7 @@ int main(int argc, char *argv[])
     char *host;
     int port;
     char *dir_root;
+    int exit_request = 0;
 
 #if 0
     if (argc < 3) {
@@ -251,6 +247,6 @@ int main(int argc, char *argv[])
     dir_root = argv[1];
 #endif
 
-    return client_connect(host, port, dir_root, NULL);
+    return client_connect(host, port, dir_root, &exit_request);
 }
 #endif

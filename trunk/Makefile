@@ -40,7 +40,7 @@ OBJS_L = lib/tcp.o lib/udp.o lib/aes.o
 
 OBJS_S = server.o utils.o http.o urldecode.o
 
-OBJS_C = client.o urldecode.o utils.o http.o
+OBJS_C = client.o urldecode.o utils.o http.o httpd.o
 
 $(TARGET_S): $(OBJS_L) $(OBJS_S)
 	$(CC) -o $@ $^ $(LIBS)

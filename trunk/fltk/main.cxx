@@ -19,11 +19,7 @@
 
 char infoText[128];
 
-#if !defined(_WIN32) || defined(ENABLE_PTHREADS)
-pthread_t tid;
-#endif
-
-static int sock;
+static int exit_request;
 
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
 static void *thread_client(void *arg)
@@ -34,8 +30,9 @@ static void thread_client(void *arg)
     char *host = "getmyfil.es";
     int port = 8100;
 
+    exit_request = 0;
     set_online();
-    client_connect(host, port, (char *) arg, &sock);
+    client_connect(host, port, (char *) arg, &exit_request);
     set_offline();
 
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
@@ -45,6 +42,9 @@ static void thread_client(void *arg)
 
 int online_client(const char *path)
 {
+#if !defined(_WIN32) || defined(ENABLE_PTHREADS)
+    pthread_t tid;
+#endif
     fprintf(stderr, "Path %s\n", path);
 
     if (strlen(path) == 0) {
@@ -66,10 +66,7 @@ int online_client(const char *path)
 
 int offline_client(void)
 {
-    client_disconnect(sock);
-#if !defined(_WIN32) || defined(ENABLE_PTHREADS)
-    pthread_cancel(tid);
-#endif
+    exit_request = 1;
     return 0;
 }
 
