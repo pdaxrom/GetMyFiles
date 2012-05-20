@@ -15,26 +15,41 @@
 #include "urldecode.h"
 #include "http.h"
 #include "utils.h"
+#include "getaddr.h"
 
 #ifdef __MINGW32__
 void *alloca(size_t);
 #endif
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 4096
 
 #define BUF_RESP_SIZE	1024
 
 static const char *tmpl_404 = "<html><head><title>404 Not Found</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /></head><body><b>Oops!</b><br /><br />The requested URL %s was not found :(</body></html>";
 
-static const char *tmpl_dir_header =
+static const char *tmpl_page_begin =
 "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
 "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">"
-"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">"
-"<head>"
-"<title>Index of %s</title>"
-"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
-"<script type=\"text/javascript\" src=\"/js/imageviewer.js\"></script>"
-"<script type=\"text/javascript\" src=\"/js/player5.js\"></script>"
+"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">";
+
+static const char *tmpl_header_begin =
+"<head>";
+
+static const char *tmpl_title =
+"<title>%s</title>";
+
+static const char *tmpl_title_dir =
+"<title>Index of %s</title>";
+
+static const char *tmpl_charset =
+"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />";
+
+static const char *tmpl_scripts =
+"<script type=\"text/javascript\" src=\"/js/p2p.js\"></script>";
+//"<script type=\"text/javascript\" src=\"/js/imageviewer.js\"></script>"
+//"<script type=\"text/javascript\" src=\"/js/player5.js\"></script>";
+
+static const char *tmpl_style =
 "<style type=\"text/css\">"
 "a, a:active {text-decoration: none; color: blue;}"
 "a:visited {color: #48468F;}"
@@ -42,14 +57,18 @@ static const char *tmpl_dir_header =
 "body {background-color: #F5F5F5;}"
 "h2 {margin-bottom: 12px;}"
 "table {margin-left: 12px;}"
-"th, td { font: 90%% monospace; text-align: left;}"
+"th, td { font: 90% monospace; text-align: left;}"
 "th { font-weight: bold; padding-right: 14px; padding-bottom: 3px;}"
 "td {padding-right: 14px;}"
 "td.s, th.s {text-align: right;}"
 "div.list { background-color: white; border-top: 1px solid #646464; border-bottom: 1px solid #646464; padding-top: 10px; padding-bottom: 14px;}"
-"div.foot { font: 90%% monospace; color: #787878; padding-top: 4px;}"
-"</style>"
-"</head>"
+"div.foot { font: 90% monospace; color: #787878; padding-top: 4px;}"
+"</style>";
+
+static const char *tmpl_header_end =
+"</head>";
+
+static const char *tmpl_body_begin_dir =
 "<body>"
 "<h2>Index of %s</h2>"
 "<div class=\"list\">"
@@ -57,12 +76,15 @@ static const char *tmpl_dir_header =
 "<thead><tr><th class=\"n\">Name</th><th class=\"m\">Last Modified</th><th class=\"s\">Size</th><th class=\"t\">Type</th></tr></thead>"
 "<tbody>";
 
-static const char *tmpl_dir_footer =
+static const char *tmpl_body_end_dir =
 "</tbody>"
 "</table>"
 "</div>"
 "<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
-"</body>"
+"<script type=\"text/javascript\" src=\"http://webplayer.yahooapis.com/player.js\"></script>"
+"</body>";
+
+static const char *tmpl_page_end =
 "</html>";
 
 static char *http_version = "HTTP/1.1";
@@ -149,6 +171,21 @@ static char *file_size(char *ret, int s, size_t size)
     return ret;
 }
 
+static void send_p2p_ips(tcp_channel *c)
+{
+    static char *script_begin = "<script>var my_ips=[";
+    static char *script_end = "];</script>";
+    int i = 0;
+    char buf[128];
+    char **ip_list = get_ipaddr_list();
+    tcp_write(c, script_begin, strlen(script_begin));
+    while (ip_list[i]) {
+	snprintf(buf, sizeof(buf), "\"%s:%d\",", ip_list[i++], 8000);
+	tcp_write(c, buf, strlen(buf));
+    }
+    tcp_write(c, script_end, strlen(script_end));
+}
+
 int process_dir(tcp_channel *c, char *url, char *path, int is_root, int *exit_request)
 {
     char buf[BUF_SIZE];
@@ -156,7 +193,8 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root, int *exit_re
     struct stat sb;
     if (stat(path, &sb) != -1) {
 	if ((sb.st_mode & S_IFMT) == S_IFDIR) {
-	    char *page = alloca(strlen(tmpl_dir_header) + BUF_SIZE);
+//	    char *page = alloca(strlen(tmpl_dir_header) + BUF_SIZE);
+	    char page[BUF_SIZE];
 	    char *resp = http_response_begin(200, "OK");
 	    http_response_add_content_type(resp, "text/html; charset=UTF-8");
 	    http_response_end(resp);
@@ -167,7 +205,22 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root, int *exit_re
 	    free(resp);
 
 	    char *d_url = url_decode(url);
-	    snprintf(page, strlen(tmpl_dir_header) + BUF_SIZE, tmpl_dir_header, d_url, d_url);
+	    snprintf(page, sizeof(page), "%s", tmpl_page_begin);
+	    tcp_write(c, page, strlen(page));
+	    snprintf(page, sizeof(page), "%s", tmpl_header_begin);
+	    tcp_write(c, page, strlen(page));
+	    snprintf(page, sizeof(page), tmpl_title_dir, d_url);
+	    tcp_write(c, page, strlen(page));
+	    snprintf(page, sizeof(page), "%s", tmpl_charset);
+	    tcp_write(c, page, strlen(page));
+	    send_p2p_ips(c);
+	    snprintf(page, sizeof(page), "%s", tmpl_scripts);
+	    tcp_write(c, page, strlen(page));
+	    snprintf(page, sizeof(page), "%s", tmpl_style);
+	    tcp_write(c, page, strlen(page));
+	    snprintf(page, sizeof(page), "%s", tmpl_header_end);
+	    tcp_write(c, page, strlen(page));
+	    snprintf(page, sizeof(page), tmpl_body_begin_dir, d_url);
 	    tcp_write(c, page, strlen(page));
 	    free(d_url);
 #ifndef _WIN32
@@ -274,9 +327,10 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root, int *exit_re
 		FindClose(hFind);
 	    }
 #endif
-	    snprintf(page, strlen(tmpl_dir_header) + BUF_SIZE, tmpl_dir_footer, url);
+	    snprintf(page, sizeof(page), "%s", tmpl_body_end_dir);
 	    tcp_write(c, page, strlen(page));
-
+	    snprintf(page, sizeof(page), "%s", tmpl_page_end);
+	    tcp_write(c, page, strlen(page));
 	} else {
 	    FILE *f = fopen(path, "rb");
 	    if (f) {
