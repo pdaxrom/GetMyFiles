@@ -14,6 +14,7 @@
 #include "tcp.h"
 #include "http.h"
 #include "httpd.h"
+#include "utils.h"
 
 #define BUF_SIZE	1024
 
@@ -23,6 +24,28 @@ typedef struct {
     char *prefix;
     int *exit_request;
 } client_info;
+
+char *get_header_tag(char *header, char *tag)
+{
+    char *ptr = header;
+
+    do {
+	if (!strncmp(ptr, tag, strlen(tag))) {
+	    int i = 0;
+	    ptr += strlen(tag) + 1;
+	    while (ptr[i++] >= ' ');
+	    char *ret = malloc(i);
+	    memcpy(ret, ptr, i);
+	    ret[i - 1] = 0;
+	    return ret;
+	} else
+	    while (*ptr++ > ' ');
+	while (*ptr > 0 && *ptr < ' ')
+	    ptr++;
+    } while(*ptr != 0);
+
+    return NULL;
+}
 
 static void thread_client(void *arg)
 {
@@ -42,7 +65,22 @@ static void thread_client(void *arg)
 	    url[i] = buf[i + 4];
 	url[i] = 0;
 
-	process_page(client->c, url, client->prefix, client->root, client->exit_request);
+	if (!strcmp(url, "/js/getmyfiles.js")) {
+	    char *h_val = get_header_tag(buf, "Host:");
+	    char buf[BUF_SIZE];
+	    snprintf(buf, sizeof(buf), "P2P.go(\"%s\");", h_val);
+	    char *resp = http_response_begin(200, "OK");
+	    http_response_add_content_type(resp, get_mimetype(url));
+	    http_response_add_content_length(resp, strlen(buf));
+	    http_response_end(resp);
+	    if (tcp_write(client->c, resp, strlen(resp)) == strlen(resp)) {
+		tcp_write(client->c, buf, strlen(buf));
+	    }
+	    free(resp);
+	    free(h_val);
+	} else {
+	    process_page(client->c, url, client->prefix, client->root, client->exit_request);
+	}
     }
 
     tcp_close(client->c);
@@ -59,7 +97,7 @@ int httpd_main(httpd_args *args)
 
     args->exit_request = 0;
 
-    fprintf(stderr, "Starting local httpd http://localhost:%d/%s -> %s\n", args->port, args->prefix, args->root);
+    fprintf(stderr, "Starting local httpd http://localhost:%d%s -> %s\n", args->port, args->prefix, args->root);
 
     while (!args->exit_request){
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)

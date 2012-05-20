@@ -15,7 +15,7 @@ else
 EXEEXT		= .exe
 CC		= i686-mingw32-gcc
 CXX		= i686-mingw32-g++
-LIBS		= -static -g -lssl -lcrypto -lz -lwsock32 -lgdi32
+LIBS		= -static -g -lssl -lcrypto -lz -lwsock32 -liphlpapi -lgdi32
 WINDRES		= i686-mingw32-windres
 endif
 
@@ -34,7 +34,7 @@ TARGET = getmyfiles$(EXEEXT)
 all: $(TARGET)
 
 OBJS_G = main.o gui.o
-OBJS_C = ../client.o ../urldecode.o ../http.o ../utils.o ../httpd.o
+OBJS_C = ../client.o ../urldecode.o ../http.o ../utils.o ../httpd.o ../getaddr.o
 OBJS_L = ../lib/tcp.o ../lib/udp.o ../lib/aes.o
 
 ifeq (mingw32, $(SYSTEM))
