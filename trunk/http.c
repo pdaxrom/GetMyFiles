@@ -25,8 +25,6 @@ void *alloca(size_t);
 
 #define BUF_RESP_SIZE	1024
 
-static const char *tmpl_404 = "<html><head><title>404 Not Found</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /></head><body><b>Oops!</b><br /><br />The requested URL %s was not found :(</body></html>";
-
 static const char *tmpl_page_begin =
 "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
 "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">"
@@ -62,6 +60,7 @@ static const char *tmpl_style =
 "td {padding-right: 14px;}"
 "td.s, th.s {text-align: right;}"
 "div.list { background-color: white; border-top: 1px solid #646464; border-bottom: 1px solid #646464; padding-top: 10px; padding-bottom: 14px;}"
+"div.err { font: 90% monospace; color: #F50000; text-align: left;}"
 "div.foot { font: 90% monospace; color: #787878; padding-top: 4px;}"
 "</style>";
 
@@ -82,6 +81,15 @@ static const char *tmpl_body_end_dir =
 "</div>"
 "<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
 "<script type=\"text/javascript\" src=\"http://webplayer.yahooapis.com/player.js\"></script>"
+"</body>";
+
+static const char *tmpl_body_error =
+"<body>"
+"<h2>Not Found</h2>"
+"<div class=\"list\">"
+"<div class=\"err\">The requested URL %s was not found on this server.</div>"
+"</div>"
+"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
 "</body>";
 
 static const char *tmpl_page_end =
@@ -129,20 +137,35 @@ char *http_response_end(char *resp)
 
 int send_404(tcp_channel *c, char *url)
 {
-    int ret = -1;
-    char buf[BUF_SIZE];
+    char page[BUF_SIZE];
     char *resp = http_response_begin(404, "Not found");
     http_response_add_content_type(resp, "text/html; charset=UTF-8");
     http_response_add_connection(resp, "close");
     http_response_end(resp);
-
-    snprintf(buf, sizeof(buf), tmpl_404, url);
-
-    if (tcp_write(c, resp, strlen(resp)) == strlen(resp)) {
-	if (tcp_write(c, buf, strlen(buf)) == strlen(buf))
-	    ret = 0;
+    if (tcp_write(c, resp, strlen(resp)) != strlen(resp)) {
+	free(resp);
+	return 1;
     }
-    free(resp);
+
+    char *d_url = url_decode(url);
+    snprintf(page, sizeof(page), "%s", tmpl_page_begin);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_header_begin);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), tmpl_title, "404 Not Found");
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_charset);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_style);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_header_end);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), tmpl_body_error, d_url);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_page_end);
+    tcp_write(c, page, strlen(page));
+    free(d_url);
+
     return 0;
 }
 
@@ -354,10 +377,10 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root, int *exit_re
 		}
 		fclose(f);
 	    } else
-		send_404(c, path);
+		send_404(c, url);
 	}
     } else
-	send_404(c, path);
+	send_404(c, url);
     return 0;
 }
 
@@ -402,10 +425,10 @@ int process_page(tcp_channel *channel, char *url, char *dir_prefix, char *dir_ro
 #endif
 	    process_dir(channel, url, normal_path, is_root, exit_request);
 	} else
-	    send_404(channel, path);
+	    send_404(channel, url);
 	free(normal_path);
     } else {
-	send_404(channel, path);
+	send_404(channel, url);
     }
 
     free(path);
