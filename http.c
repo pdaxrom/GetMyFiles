@@ -16,6 +16,10 @@
 #include "http.h"
 #include "utils.h"
 
+#ifdef __MINGW32__
+void *alloca(size_t);
+#endif
+
 #define BUF_SIZE 1024
 
 #define BUF_RESP_SIZE	1024
@@ -145,7 +149,7 @@ static char *file_size(char *ret, int s, size_t size)
     return ret;
 }
 
-int process_dir(tcp_channel *c, char *url, char *path, int is_root)
+int process_dir(tcp_channel *c, char *url, char *path, int is_root, int *exit_request)
 {
     char buf[BUF_SIZE];
 
@@ -162,9 +166,10 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root)
 	    }
 	    free(resp);
 
-	    snprintf(page, strlen(tmpl_dir_header) + BUF_SIZE, tmpl_dir_header, path, path);
+	    char *d_url = url_decode(url);
+	    snprintf(page, strlen(tmpl_dir_header) + BUF_SIZE, tmpl_dir_header, d_url, d_url);
 	    tcp_write(c, page, strlen(page));
-
+	    free(d_url);
 #ifndef _WIN32
 	    struct dirent **namelist;
 	    int n = scandir(path, &namelist, 0, alphasort);
@@ -211,7 +216,12 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root)
 			free(name);
 		    }
 		    free(namelist[i]);
+		    if (exit_request)
+			if (*exit_request)
+			    break;
 		}
+		for (; i < n; i++)
+		    free(namelist[i]);
 		free(namelist);
 	    }
 #else
@@ -233,7 +243,7 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root)
 			ftype = "Directory";
 			strcpy(fsize, "-");
 		    } else {
-			ftype = "Regular file";
+			ftype = get_mimetype(ffd.cFileName);
 			file_size(fsize, sizeof(fsize), (ffd.nFileSizeHigh * (MAXDWORD + 1)) + ffd.nFileSizeLow);
 		    }
 
@@ -251,18 +261,17 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root)
 		    } else
 			strcpy(ftime, "");
 
-			if ((sb.st_mode & S_IFMT) == S_IFREG) {
-			    ftype = get_mimetype(name);
-			}
-
 		    if (!(is_root && name[0] == '.' && name[1] == '.' && name[2] == 0) &&
 			!(name[0] == '.' && name[1] == 0)) {
-			snprintf(buf, BUF_SIZE, "<tr><td class=\"n\"><a href=\"%s/%s\">%s</a></td><td class=\"m\">%s</td><td class=\"s\">%s</td><td class=\"t\">%s</td></tr>", c->path, name, szFile1, ftime, fsize, ftype);
+			snprintf(buf, BUF_SIZE, "<tr><td class=\"n\"><a href=\"%s/%s\">%s</a></td><td class=\"m\">%s</td><td class=\"s\">%s</td><td class=\"t\">%s</td></tr>", url, name, szFile1, ftime, fsize, ftype);
 			tcp_write(c, buf, strlen(buf));
 		    }
 		    free(name);
+		    if (exit_request)
+			if (*exit_request)
+			    break;
 		} while (FindNextFile(hFind, &ffd) != 0);
-		    FindClose(hFind);
+		FindClose(hFind);
 	    }
 #endif
 	    snprintf(page, strlen(tmpl_dir_header) + BUF_SIZE, tmpl_dir_footer, url);
@@ -285,6 +294,9 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root)
 		while ((r = fread(buf, 1, BUF_SIZE, f)) > 0) {
 		    if (tcp_write(c, buf, r) != r)
 			break;
+		    if (exit_request)
+			if (*exit_request)
+			    break;
 		}
 		fclose(f);
 	    } else
@@ -292,5 +304,57 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root)
 	}
     } else
 	send_404(c, path);
+    return 0;
+}
+
+int process_page(tcp_channel *channel, char *url, char *dir_prefix, char *dir_root, int *exit_request)
+{
+    char buf[BUF_SIZE];
+    char *path = url_decode(url);
+
+    //fprintf(stderr, "before: %s\n", path);
+    remove_slashes(url);
+    remove_slashes(path);
+    //fprintf(stderr, "after: %s\n", path);
+
+
+    if (!strncmp(dir_prefix, path, strlen(dir_prefix))) {
+#ifdef _WIN32
+	wchar_t wbuf[BUF_SIZE];
+	char *_path = alloca(strlen(path));
+	memset(wbuf, 0, BUF_SIZE * sizeof(wchar_t));
+	Utf8ToUnicode16(path, wbuf, BUF_SIZE);
+	Unicode16ToACP(wbuf, _path, BUF_SIZE);
+	snprintf(buf, sizeof(buf), "%s/%s", dir_root, _path + strlen(dir_prefix));
+#else
+	snprintf(buf, sizeof(buf), "%s/%s", dir_root, path + strlen(dir_prefix));
+#endif
+
+	char *normal_path = _realpath(buf, NULL);
+
+	//fprintf(stderr, "Localpath =  %s - %s - %s - %d\n", path, normal_path, dir_root, is_root);
+
+	fprintf(stderr, "Get: %s\n", normal_path);
+
+	if (!normal_path) {
+	    send_404(channel, path);
+	} else if (!strncmp(normal_path, dir_root, strlen(dir_root))) {
+	    int is_root = 0;
+	    if (!strcmp(normal_path, dir_root))
+		is_root = 1;
+#ifdef _WIN32
+	    if (normal_path[strlen(normal_path) - 1] == '\\')
+		normal_path[strlen(normal_path) - 1] = 0;
+#endif
+	    process_dir(channel, url, normal_path, is_root, exit_request);
+	} else
+	    send_404(channel, path);
+	free(normal_path);
+    } else {
+	send_404(channel, path);
+    }
+
+    free(path);
+
     return 0;
 }
