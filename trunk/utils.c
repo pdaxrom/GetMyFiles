@@ -1,9 +1,18 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include <stdio.h>
 #include <limits.h>
 #include <string.h>
 #include "utils.h"
+
+static struct {
+    char *ext;
+    char *mime;
+} mimetypes[] = {
+#include "mime.h"
+{NULL, NULL}
+};
 
 #ifdef __APPLE__
 #include <stdlib.h>
@@ -141,4 +150,19 @@ char *remove_slashes(char *str)
 	str[i - 1] = 0;
 
     return str;
+}
+
+char *get_mimetype(char *file)
+{
+    char *ptr = strrchr(file, '.');
+    if (ptr && strlen(ptr + 1)) {
+	int i = 0;
+	while (mimetypes[i].ext) {
+	    if (!strcmp(mimetypes[i].ext, ptr))
+		return mimetypes[i].mime;
+	    i++;
+	}
+    }
+
+    return "application/octet-stream";
 }

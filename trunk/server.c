@@ -307,7 +307,7 @@ static void thread_http_request(void *arg)
 			    if (f) {
 				int r;
 				char *resp = http_response_begin(200, "OK");
-				http_response_add_content_type(resp, "application/octet-stream");
+				http_response_add_content_type(resp, get_mimetype(normal_path));
 				http_response_add_content_length(resp, sb.st_size);
 				http_response_end(resp);
 				if (tcp_write(c->channel, resp, strlen(resp)) == strlen(resp)) {
