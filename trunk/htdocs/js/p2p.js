@@ -31,14 +31,14 @@ function require_once(url) {
 var P2P = function() {
     var pattern = "^(([^:/\\?#]+):)?(//(([^:/\\?#]*)(?::([^/\\?#]*))?))?([^\\?#]*)(\\?([^#]*))?(#(.*))?$";
     var rx = new RegExp(pattern); 
+    var parts = rx.exec(location.href);
     return {
 	init:function() {
 	    for (var i = 0; i < my_ips.length; i++) {
-		require_once("http://" + my_ips[i] + "/js/getmyfiles.js");
+		require_once("http://" + my_ips[i] + "/js/getmyfiles.js?" + parts[7]);
 	    }
 	},
 	go:function(hostname) {
-	    var parts = rx.exec(location.href);
 	    location.href = "http://" + hostname + parts[7];
 	}
     };
