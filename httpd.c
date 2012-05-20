@@ -61,16 +61,18 @@ static void thread_client(void *arg)
     if (!strncmp(buf, "GET ", 4)) {
 	int i = 0;
 	char url[BUF_SIZE];
+	memset(url, 0, sizeof(url));
 	for (; (buf[i + 4] > ' ') && (i < BUF_SIZE - 1); i++)
 	    url[i] = buf[i + 4];
 	url[i] = 0;
 
-	if (!strcmp(url, "/js/getmyfiles.js")) {
+	if ((!strncmp(url, "/js/getmyfiles.js?", 18)) &&
+	    (!strncmp(url + 18, client->prefix, strlen(client->prefix)))) {
 	    char *h_val = get_header_tag(buf, "Host:");
 	    char buf[BUF_SIZE];
 	    snprintf(buf, sizeof(buf), "P2P.go(\"%s\");", h_val);
 	    char *resp = http_response_begin(200, "OK");
-	    http_response_add_content_type(resp, get_mimetype(url));
+	    http_response_add_content_type(resp, get_mimetype("getmyfiles.js"));
 	    http_response_add_content_length(resp, strlen(buf));
 	    http_response_end(resp);
 	    if (tcp_write(client->c, resp, strlen(resp)) == strlen(resp)) {
@@ -78,6 +80,13 @@ static void thread_client(void *arg)
 	    }
 	    free(resp);
 	    free(h_val);
+	} else if (!strcmp(url, "/js/p2p.js")) {
+	    char *resp = http_response_begin(200, "OK");
+	    http_response_add_content_type(resp, get_mimetype("p2p.js"));
+	    http_response_add_content_length(resp, 0);
+	    http_response_end(resp);
+	    tcp_write(client->c, resp, strlen(resp));
+	    free(resp);
 	} else {
 	    process_page(client->c, url, client->prefix, client->root, client->exit_request);
 	}
