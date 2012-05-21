@@ -46,15 +46,21 @@ $(TARGET): $(OBJS_G) $(OBJS_C) $(OBJS_L) $(OBJS_R)
 
 # clean everything
 clean:
-	rm -f $(OBJS_G) $(OBJS_C) $(OBJS_L) $(OBJS_R) $(TARGET) getmyfiles.app/Contents/MacOS/$(TARGET)
+	rm -f $(OBJS_G) $(OBJS_C) $(OBJS_L) $(OBJS_R) $(TARGET) getmyfiles.app/Contents/MacOS/$(TARGET) getmyfiles.app/Contents/Info.plist getmyfiles.app/Contents/Info.pliste
 
 package: all
 ifeq (Darwin, $(SYSTEM))
 	install -m 755 $(TARGET) getmyfiles.app/Contents/MacOS/$(TARGET)
+	cp getmyfiles.app/Contents/Info.plist.in getmyfiles.app/Contents/Info.plist
+	sed -ie "s|@VERSION@|$(VERSION)|" getmyfiles.app/Contents/Info.plist
 	rm -rf /tmp/getmyfiles.app
 	cp -R getmyfiles.app /tmp/
+	rm -f /tmp/getmyfiles.app/Contents/Info.plist.in
+	rm -f /tmp/getmyfiles.app/Contents/Info.pliste
 	find /tmp/getmyfiles.app -name ".svn" | xargs rm -rf -
+	rm -f /tmp/getmyfiles-$(VERSION)-osx.zip
 	cd /tmp && zip -r9 getmyfiles-$(VERSION)-osx.zip getmyfiles.app
+	mv /tmp/getmyfiles-$(VERSION)-osx.zip ../../
 endif
 
 .SUFFIXES: .cxx .h .fl .o .rc .res $(EXEEXT)
