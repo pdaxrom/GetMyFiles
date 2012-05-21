@@ -49,6 +49,8 @@ $(TARGET): $(OBJS_G) $(OBJS_C) $(OBJS_L) $(OBJS_R)
 clean:
 	rm -f $(OBJS_G) $(OBJS_C) $(OBJS_L) $(OBJS_R) $(TARGET) getmyfiles.app/Contents/MacOS/$(TARGET) getmyfiles.app/Contents/Info.plist getmyfiles.app/Contents/Info.pliste
 
+distclean: clean
+
 package: all
 ifeq (Darwin, $(SYSTEM))
 	install -m 755 $(TARGET) getmyfiles.app/Contents/MacOS/$(TARGET)
@@ -68,6 +70,15 @@ ifeq (mingw32, $(SYSTEM))
 	rm -f ../../getmyfiles-$(VERSION)-win32.zip
 	zip -9 ../../getmyfiles-$(VERSION)-win32.zip getmyfiles.exe
 endif
+ifeq (Linux, $(SYSTEM))
+	cp debian/changelog.in debian/changelog
+	sed -i -e "s|@VERSION@|$(VERSION)|" debian/changelog
+	sed -i -e "s|@DATE@|$(shell date -R)|" debian/changelog
+	dpkg-buildpackage -rfakeroot -b -tc || true
+	rm -f debian/changelog
+	mv -f ../*.changes ../../
+	mv -f ../*.deb     ../../
+endif
 
 .SUFFIXES: .cxx .h .fl .o .rc .res $(EXEEXT)
 
@@ -76,3 +87,8 @@ endif
 
 .rc.res:
 	$(WINDRES) -i $< -O coff -o $@
+
+install: all
+	install -D -m 755 $(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
+	install -D -m 644 icon/icon.png $(DESTDIR)/usr/share/pixmaps/getmyfiles.png
+	install -D -m 644 getmyfiles.desktop $(DESTDIR)/usr/share/applications/getmyfiles.desktop
