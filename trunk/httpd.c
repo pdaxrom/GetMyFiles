@@ -90,7 +90,8 @@ static void thread_client(void *arg)
 	} else {
 	    process_page(client->c, url, client->prefix, client->root, client->exit_request);
 	}
-    }
+    } else
+	send_50x(client->c, 501);
 
     tcp_close(client->c);
     free(client);

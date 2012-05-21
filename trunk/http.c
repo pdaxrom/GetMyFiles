@@ -92,6 +92,15 @@ static const char *tmpl_body_error =
 "<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
 "</body>";
 
+static const char *tmpl_body_error_501 =
+"<body>"
+"<h2>Not Implemented</h2>"
+"<div class=\"list\">"
+"<div class=\"err\">The request is not supported.</div>"
+"</div>"
+"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"</body>";
+
 static const char *tmpl_body_error_502 =
 "<body>"
 "<h2>Bad Gateway</h2>"
@@ -164,6 +173,7 @@ int send_404(tcp_channel *c, char *url)
 	free(resp);
 	return 1;
     }
+    free(resp);
 
     char *d_url = url_decode(url);
     snprintf(page, sizeof(page), "%s", tmpl_page_begin);
@@ -187,7 +197,7 @@ int send_404(tcp_channel *c, char *url)
     return 0;
 }
 
-int send_502(tcp_channel *c)
+int send_50x(tcp_channel *c, int error)
 {
     char page[BUF_SIZE];
     char *resp = http_response_begin(502, "Bad Gateway");
@@ -198,44 +208,17 @@ int send_502(tcp_channel *c)
 	free(resp);
 	return 1;
     }
+    free(resp);
 
     snprintf(page, sizeof(page), "%s", tmpl_page_begin);
     tcp_write(c, page, strlen(page));
     snprintf(page, sizeof(page), "%s", tmpl_header_begin);
     tcp_write(c, page, strlen(page));
-    snprintf(page, sizeof(page), tmpl_title, "502 Bad Gateway");
-    tcp_write(c, page, strlen(page));
-    snprintf(page, sizeof(page), "%s", tmpl_charset);
-    tcp_write(c, page, strlen(page));
-    snprintf(page, sizeof(page), "%s", tmpl_style);
-    tcp_write(c, page, strlen(page));
-    snprintf(page, sizeof(page), "%s", tmpl_header_end);
-    tcp_write(c, page, strlen(page));
-    snprintf(page, sizeof(page), "%s", tmpl_body_error_502);
-    tcp_write(c, page, strlen(page));
-    snprintf(page, sizeof(page), "%s", tmpl_page_end);
-    tcp_write(c, page, strlen(page));
-
-    return 0;
-}
-
-int send_504(tcp_channel *c)
-{
-    char page[BUF_SIZE];
-    char *resp = http_response_begin(504, "Gateway Timeout");
-    http_response_add_content_type(resp, "text/html; charset=UTF-8");
-    http_response_add_connection(resp, "close");
-    http_response_end(resp);
-    if (tcp_write(c, resp, strlen(resp)) != strlen(resp)) {
-	free(resp);
-	return 1;
+    switch (error) {
+    case 502: snprintf(page, sizeof(page), tmpl_title, "502 Bad Gateway"); break;
+    case 504: snprintf(page, sizeof(page), tmpl_title, "504 Gateway Timeout"); break;
+    default: snprintf(page, sizeof(page), tmpl_title, "501 Not Implemented"); break;
     }
-
-    snprintf(page, sizeof(page), "%s", tmpl_page_begin);
-    tcp_write(c, page, strlen(page));
-    snprintf(page, sizeof(page), "%s", tmpl_header_begin);
-    tcp_write(c, page, strlen(page));
-    snprintf(page, sizeof(page), tmpl_title, "504 Gateway Timeout");
     tcp_write(c, page, strlen(page));
     snprintf(page, sizeof(page), "%s", tmpl_charset);
     tcp_write(c, page, strlen(page));
@@ -243,7 +226,11 @@ int send_504(tcp_channel *c)
     tcp_write(c, page, strlen(page));
     snprintf(page, sizeof(page), "%s", tmpl_header_end);
     tcp_write(c, page, strlen(page));
-    snprintf(page, sizeof(page), "%s", tmpl_body_error_504);
+    switch (error) {
+    case 502: snprintf(page, sizeof(page), "%s", tmpl_body_error_502); break;
+    case 504: snprintf(page, sizeof(page), "%s", tmpl_body_error_504); break;
+    default: snprintf(page, sizeof(page), "%s", tmpl_body_error_501); break;
+    }
     tcp_write(c, page, strlen(page));
     snprintf(page, sizeof(page), "%s", tmpl_page_end);
     tcp_write(c, page, strlen(page));

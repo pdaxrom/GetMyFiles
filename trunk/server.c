@@ -264,7 +264,7 @@ static void thread_http_request(void *arg)
 		    http_add(c);
 		    if (tcp_write(info->channel, buffer, strlen(buf) + KEY_SIZE) != strlen(buf) + KEY_SIZE) {
 			fprintf(stderr, "%s tcp_write()\n", __FUNCTION__);
-			send_502(c->channel);
+			send_50x(c->channel, 502);
 			http_del(c);
 			pthread_mutex_lock(&mutex_users);
 			info->in_use--;
@@ -323,7 +323,7 @@ static void thread_http_request(void *arg)
 		}
 	    }
 	} else
-	    fprintf(stderr, "%s Unknown request!\n", __FUNCTION__);
+	    send_50x(c->channel, 501);
     } else
 	fprintf(stderr, "%s tcp_read() %d\n", __FUNCTION__, r);
 
@@ -453,7 +453,7 @@ static void thread_http_cleanup(void *argc)
 		    tmp = tmp->next;
 		}
 		
-		send_504(tmp1->channel);
+		send_50x(tmp1->channel, 504);
 		
 		http_info_free(tmp1);
 		https++;
