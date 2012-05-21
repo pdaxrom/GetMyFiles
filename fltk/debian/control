@@ -1,0 +1,13 @@
+Source: getmyfiles
+Section: misc
+Priority: optional
+Maintainer: Support Team <support@getmyfil.es>
+Build-Depends: cdbs, debhelper (>= 5), libssl-dev
+Standards-Version: 1.0
+Homepage: http://getmyfil.es
+
+Package: getmyfiles
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: GetMyFil.es client
+ Share local folder online as web page

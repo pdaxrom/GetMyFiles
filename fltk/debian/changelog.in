@@ -1,0 +1,5 @@
+getmyfiles (@VERSION@) unstable; urgency=low
+
+  * Debian build rules.
+
+ -- Support Team <support@getmyfil.es>  @DATE@

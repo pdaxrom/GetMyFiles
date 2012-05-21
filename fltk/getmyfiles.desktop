@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=GetMyFil.es client
+Name[ru]=GetMyFil.es клиент
+Comment=Sharing local folder online
+Comment[ru]=Доступ к локальной папке из интернета
+TryExec=getmyfiles
+Exec=getmyfiles
+Icon=getmyfiles.png
+Terminal=false
+Type=Application
+Categories=Network;
