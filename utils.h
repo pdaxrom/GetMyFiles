@@ -1,6 +1,10 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef DEBUG
 #define  dprintf(...)  fprintf(stderr, __VA_ARGS__)
 #else
@@ -25,5 +29,9 @@ BOOL ACPToUnicode16(CHAR *in_Src, WCHAR *out_Dst, INT in_MaxLen);
 
 char *remove_slashes(char *str);
 char *get_mimetype(char *file);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
