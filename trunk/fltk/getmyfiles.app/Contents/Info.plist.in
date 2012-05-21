@@ -11,7 +11,7 @@
 	<string>org.fltk.getmyfiles</string>
 
 	<key>CFBundleVersion</key>
-	<string>1.0</string>
+	<string>@VERSION@</string>
 
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
@@ -35,10 +35,10 @@
 	<string>icon.icns</string>
 
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>@VERSION@</string>
 
 	<key>CFBundleGetInfoString</key>
-	<string>1.0, Copyright 2012 by getmyfil.es</string>
+	<string>@VERSION@, Copyright 2012 by getmyfil.es</string>
 
     </dict>
 </plist>
