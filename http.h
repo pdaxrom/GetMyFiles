@@ -10,6 +10,8 @@ char *http_response_add_connection(char *resp, char *token);
 char *http_response_end(char *resp);
 
 int send_404(tcp_channel *c, char *url);
+int send_502(tcp_channel *c);
+int send_504(tcp_channel *c);
 int process_dir(tcp_channel *c, char *url, char *path, int is_root, int *exit_request);
 int process_page(tcp_channel *channel, char *url, char *dir_prefix, char *dir_root, int *exit_request);
 

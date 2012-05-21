@@ -92,6 +92,24 @@ static const char *tmpl_body_error =
 "<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
 "</body>";
 
+static const char *tmpl_body_error_502 =
+"<body>"
+"<h2>Bad Gateway</h2>"
+"<div class=\"list\">"
+"<div class=\"err\">The server received an invalid response from the requested shared link.</div>"
+"</div>"
+"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"</body>";
+
+static const char *tmpl_body_error_504 =
+"<body>"
+"<h2>Gateway Timeout</h2>"
+"<div class=\"list\">"
+"<div class=\"err\">The server did not receive a timely response from the requested shared link.</div>"
+"</div>"
+"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"</body>";
+
 static const char *tmpl_page_end =
 "</html>";
 
@@ -165,6 +183,70 @@ int send_404(tcp_channel *c, char *url)
     snprintf(page, sizeof(page), "%s", tmpl_page_end);
     tcp_write(c, page, strlen(page));
     free(d_url);
+
+    return 0;
+}
+
+int send_502(tcp_channel *c)
+{
+    char page[BUF_SIZE];
+    char *resp = http_response_begin(502, "Bad Gateway");
+    http_response_add_content_type(resp, "text/html; charset=UTF-8");
+    http_response_add_connection(resp, "close");
+    http_response_end(resp);
+    if (tcp_write(c, resp, strlen(resp)) != strlen(resp)) {
+	free(resp);
+	return 1;
+    }
+
+    snprintf(page, sizeof(page), "%s", tmpl_page_begin);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_header_begin);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), tmpl_title, "502 Bad Gateway");
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_charset);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_style);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_header_end);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_body_error_502);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_page_end);
+    tcp_write(c, page, strlen(page));
+
+    return 0;
+}
+
+int send_504(tcp_channel *c)
+{
+    char page[BUF_SIZE];
+    char *resp = http_response_begin(504, "Gateway Timeout");
+    http_response_add_content_type(resp, "text/html; charset=UTF-8");
+    http_response_add_connection(resp, "close");
+    http_response_end(resp);
+    if (tcp_write(c, resp, strlen(resp)) != strlen(resp)) {
+	free(resp);
+	return 1;
+    }
+
+    snprintf(page, sizeof(page), "%s", tmpl_page_begin);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_header_begin);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), tmpl_title, "504 Gateway Timeout");
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_charset);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_style);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_header_end);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_body_error_504);
+    tcp_write(c, page, strlen(page));
+    snprintf(page, sizeof(page), "%s", tmpl_page_end);
+    tcp_write(c, page, strlen(page));
 
     return 0;
 }

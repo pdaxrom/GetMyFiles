@@ -1,4 +1,4 @@
-getmyfiles-server (1.0) unstable; urgency=low
+getmyfiles-server (0.91) unstable; urgency=low
 
   * Debian build rules.
 
