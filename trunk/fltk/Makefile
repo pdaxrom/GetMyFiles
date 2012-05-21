@@ -66,9 +66,9 @@ ifeq (Darwin, $(SYSTEM))
 	mv /tmp/getmyfiles-$(VERSION)-osx.zip ../../
 endif
 ifeq (mingw32, $(SYSTEM))
-	$(STRIP) getmyfiles.exe
+	$(STRIP) $(TARGET)
 	rm -f ../../getmyfiles-$(VERSION)-win32.zip
-	zip -9 ../../getmyfiles-$(VERSION)-win32.zip getmyfiles.exe
+	zip -9 ../../getmyfiles-$(VERSION)-win32.zip $(TARGET)
 endif
 ifeq (Linux, $(SYSTEM))
 	cp debian/changelog.in debian/changelog
