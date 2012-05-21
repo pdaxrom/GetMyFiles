@@ -1,4 +1,4 @@
-VERSION		:= 0.91
+VERSION		:= $(shell ../getversion.sh ../)
 SYSTEM		:= $(shell uname)
 
 ifneq (mingw32, $(SYSTEM))
