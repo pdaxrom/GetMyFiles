@@ -17,6 +17,7 @@ CC		= i686-mingw32-gcc
 CXX		= i686-mingw32-g++
 LIBS		= -static -g -lssl -lcrypto -lz -lwsock32 -liphlpapi -lgdi32
 WINDRES		= i686-mingw32-windres
+STRIP		= i686-mingw32-strip
 endif
 
 CFLAGS = -g -Wall -I. -I.. -I../lib -DCLIENT_GUI -DVERSION=$(VERSION)
@@ -61,6 +62,11 @@ ifeq (Darwin, $(SYSTEM))
 	rm -f /tmp/getmyfiles-$(VERSION)-osx.zip
 	cd /tmp && zip -r9 getmyfiles-$(VERSION)-osx.zip getmyfiles.app
 	mv /tmp/getmyfiles-$(VERSION)-osx.zip ../../
+endif
+ifeq (mingw32, $(SYSTEM))
+	$(STRIP) getmyfiles.exe
+	rm -f ../../getmyfiles-$(VERSION)-win32.zip
+	zip -9 ../../getmyfiles-$(VERSION)-win32.zip getmyfiles.exe
 endif
 
 .SUFFIXES: .cxx .h .fl .o .rc .res $(EXEEXT)
