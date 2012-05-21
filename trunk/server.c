@@ -29,9 +29,6 @@
 
 static char *dir_root = WWWROOT;
 
-static const char *reply_oops = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><head><title>Oops!</title></head><body><b>This link doesn't exists!</b></body></html>";
-static const char *reply_oops_timeout = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><head><title>Oops!</title></head><body><b>Connection timeout!</b></body></html>";
-
 typedef struct http_info {
     tcp_channel	*channel;
     char	key[KEY_SIZE];
@@ -264,12 +261,10 @@ static void thread_http_request(void *arg)
 		    info->in_use++;
 		    pthread_mutex_unlock(&mutex_users);
 		    memcpy(buffer, c->key, KEY_SIZE);
-//		    fprintf(stderr, "OKAY!\n");
 		    http_add(c);
 		    if (tcp_write(info->channel, buffer, strlen(buf) + KEY_SIZE) != strlen(buf) + KEY_SIZE) {
 			fprintf(stderr, "%s tcp_write()\n", __FUNCTION__);
-			tcp_write(c->channel, reply_oops, strlen(reply_oops));
-			//send_404(c->channel, buf + 4);
+			send_502(c->channel);
 			http_del(c);
 			pthread_mutex_lock(&mutex_users);
 			info->in_use--;
@@ -280,7 +275,6 @@ static void thread_http_request(void *arg)
 			pthread_mutex_unlock(&mutex_users);
 			return;
 		    } else {
-//			fprintf(stderr, "OKAY2\n");
 			pthread_mutex_lock(&mutex_users);
 			info->in_use--;
 			pthread_mutex_unlock(&mutex_users);
@@ -459,7 +453,7 @@ static void thread_http_cleanup(void *argc)
 		    tmp = tmp->next;
 		}
 		
-		tcp_write(tmp1->channel, reply_oops_timeout, strlen(reply_oops_timeout));
+		send_504(tmp1->channel);
 		
 		http_info_free(tmp1);
 		https++;

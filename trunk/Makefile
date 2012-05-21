@@ -1,4 +1,4 @@
-VERSION		= 0.9
+VERSION		= 0.91
 WWWROOT		= /var/lib/getmyfiles/htdocs
 CONFIG_DIR	= /var/lib/getmyfiles/etc
 
