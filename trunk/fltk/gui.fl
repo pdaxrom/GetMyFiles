@@ -5,6 +5,9 @@ code_name {.cxx}
 decl {\#include <FL/Fl_Native_File_Chooser.H>} {public global
 } 
 
+decl {\#include "../utils.h"} {private local
+} 
+
 decl {int fConnected = 0;} {private local
 } 
 
@@ -39,7 +42,17 @@ Function {make_window()} {open C
 	case  1: break; 	// Cancel
 	default:		// Choice
 		fc.preset_file(fc.filename());
+\#ifdef _WIN32
+		{
+			wchar_t szFile[_MAX_PATH];
+			char szFile1[_MAX_PATH];
+			ACPToUnicode16((CHAR *)fc.filename(), szFile, _MAX_PATH);
+			Unicode16ToUtf8(szFile, szFile1, _MAX_PATH);
+			folderText->value(szFile1);
+		}
+\#else
 		folderText->value(fc.filename());
+\#endif
 		fprintf(stderr, "open %s\\n", fc.filename());
 		break;
 	}}
@@ -52,7 +65,15 @@ Function {make_window()} {open C
     Fl_Light_Button connectButton {
       label Share
       callback {if (!fConnected) {
+\#ifdef _WIN32
+	wchar_t szFile[_MAX_PATH];
+	char szFile1[_MAX_PATH];
+	Utf8ToUnicode16((CHAR *)folderText->value(), szFile, _MAX_PATH);
+	Unicode16ToACP(szFile, szFile1, _MAX_PATH);
+	fConnected = online_client(szFile1);
+\#else
 	fConnected = online_client(folderText->value());
+\#endif
 	if (fConnected) {
 		browseButton->deactivate();
 //		shareButton->value(1);
@@ -64,11 +85,11 @@ Function {make_window()} {open C
 //		shareButton->value(0);
 		urlText->value("");
 	}
-}}
+}} selected
       xywh {455 45 75 25} selection_color 88
     }
     Fl_Box infoStr {
-      label {ItsMyFile client} selected
+      label {ItsMyFile client}
       xywh {5 80 445 25}
     }
   }
