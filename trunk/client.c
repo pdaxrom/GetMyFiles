@@ -90,6 +90,7 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
     *_exit_request = 0;
 
     {
+	int wdt_counter;
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
 	pthread_t tid;
 #endif
@@ -136,6 +137,8 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
 	    fprintf(stderr, "pthread_create(thread_httpd)\n");
 	}
 
+	wdt_counter = 0;
+
 	while (1) {
 	    fd_set fds;
 	    int res;
@@ -151,11 +154,19 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
 	    if (*_exit_request)
 		break;
 
+	    // exit if no server activity more 31 sec.
+	    if (wdt_counter++ > 62) {
+		fprintf(stderr, "Watchdog timer...\n");
+		break;
+	    }
+
 	    if (!res)
 		continue;
 
 	    if (!FD_ISSET(tcp_fd(server), &fds))
 		continue;
+
+	    wdt_counter = 0;
 
 	    if ((r = tcp_read(server, buf, sizeof(buf))) <= 0) {
 		fprintf(stderr, "tcp_read()\n");
