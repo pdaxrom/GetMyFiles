@@ -1,0 +1,90 @@
+body {
+    background-color: #F5F5F5;
+    font-size: 90%;
+}
+
+.content {
+    text-align: justify;
+    text-indent: 20px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.header {
+    width: 800px;
+    height: 80px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #E3E3E3;
+    border-top: 1px solid #646464;
+}
+
+.header img {
+    height: 80px;
+    float: left;
+    clear: left;
+    padding: 0px 10px;
+}
+
+.logo {
+    width: 60%;
+    float: left;
+    padding: 0px 0px;
+}
+
+.bigtext {
+    font-size: 130%;
+}
+.smalltext {
+    font-size: 80%;
+}
+
+.menu {
+	width: 40%;
+	float: right;
+}
+
+.menu a, .menu a:hover, .menu a:visited {
+	text-decoration: none;
+	color: #1a1a1a;
+	display: block;
+	float: right;
+	padding: 5px 8px;
+}
+
+.menu a:hover {
+	text-decoration: underline;
+}
+
+div.list {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: white;
+    border-top: 1px solid #646464;
+    border-bottom: 1px solid #646464;
+    padding-top: 10px;
+    padding-bottom: 14px;
+}
+
+div.footer {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    color: #1A1A1A;
+    padding-top: 4px;
+}
+
+p.copyright {
+    text-align: center;
+    margin: 2px;
+}
+
+.copyright a, .copyright a:hover, .copyright a:visited {
+	text-decoration: none;
+	color: #1a1a1a;
+}
+
+.copyright a:hover {
+	text-decoration: underline;
+}
