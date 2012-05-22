@@ -66,3 +66,6 @@ install-server: $(TARGET_S)
 
 package:
 	dpkg-buildpackage -rfakeroot -b -tc || true
+
+install-site:
+	tar jcvf ../getmyfiles-site.tbz --exclude=.svn -C site .
