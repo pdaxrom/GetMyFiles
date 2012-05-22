@@ -2,7 +2,7 @@
 $txt = array(
     'title' => 'GetMyFil.es - Contacts',
     'slog1' => 'No clouds, no uploads.',
-    'slog2' => 'Control files yourself.',
+    'slog2' => 'Control your files yourself.',
     'contacts' => 'Contacts',
     'terms' => 'Terms of Service',
     'download' => 'Download',

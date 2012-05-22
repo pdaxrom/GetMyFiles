@@ -2,12 +2,12 @@
 $txt = array(
     'title' => 'GetMyFil.es - Terms of Service',
     'slog1' => 'No clouds, no uploads.',
-    'slog2' => 'Control files yourself.',
+    'slog2' => 'Control your files yourself.',
     'contacts' => 'Contacts',
     'terms' => 'Terms of Service',
     'download' => 'Download',
     'content' => '<ul>
-    <li>The service is not intended for uploading files in the shared folder from the internet.</li>
+    <li>The service is not intended for uploading files to the shared folder from the internet.</li>
     <li>The service is not responsible for the content of shared files.</li>
     <li>The service does not accept liability for improper use of the shared files.</li>
     <li>The service is not responsible for the privacy of shared files.</li>
