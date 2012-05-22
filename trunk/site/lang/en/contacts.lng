@@ -1,0 +1,12 @@
+<?php
+$txt = array(
+    'title' => 'GetMyFil.es - Contacts',
+    'slog1' => 'No clouds, no uploads.',
+    'slog2' => 'Control files yourself.',
+    'contacts' => 'Contacts',
+    'terms' => 'Terms of Service',
+    'download' => 'Download',
+    'content' => 'Support and feedback: <a href="mailto:support@getmyfil.es">support@getmyfil.es</a>
+    '
+);
+?>

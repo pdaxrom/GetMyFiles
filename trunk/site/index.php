@@ -1,5 +1,9 @@
 <?php
 
+setcookie ('PHPSESSID', $_COOKIE['PHPSESSID'], time() + 60 * 30, '/');
+
+session_start();
+
 include "template.class.php";
 
 function is_defined($var) {
@@ -8,6 +12,37 @@ function is_defined($var) {
     } else {
 	return false;
     }
+}
+
+function is_session($var) {
+    if (isset($_SESSION[$var])) {
+	return true;
+    } else {
+	return false;
+    }
+}
+
+$lang = "en";
+if (is_session("lang")) {
+    $lang = $_SESSION["lang"];
+}
+
+if (is_defined("l")) {
+    $l = $_REQUEST["l"];
+    if ($lang == "ru" || $lang == "en") {
+	$lang = $l;
+	$_SESSION["lang"] = $lang;
+    }
+}
+
+$new_lang = "Русский";
+$nlang = "";
+if ($lang == "ru") {
+    $new_lang = "English";
+    $nlang = "en";
+} else {
+    $new_lang = "Русский";
+    $nlang = "ru";
 }
 
 $page = "";
@@ -20,12 +55,16 @@ if ($page == "") {
 }
 
 $tmpl_file = "tmpl/".$page.".html";
-$lang_file = "lang/ru/".$page.".lng";
+$lang_file = "lang/".$lang."/".$page.".lng";
 
-if (!file_exists($tmpl_file) || !file_exists($lang_file)) {
+if (!file_exists($tmpl_file)) {
     $page = "index";
     $tmpl_file = "tmpl/".$page.".html";
-    $lang_file = "lang/ru/".$page.".lng";
+}
+
+if (!file_exists($lang_file)) {
+    $lang = "en";
+    $lang_file = "lang/en/".$page.".lng";
 }
 
 include $lang_file;
@@ -37,6 +76,8 @@ foreach ($txt as $k => $v) {
     $template->replace($k, $v);
 }
 
+$template->replace("lang_link", "?p=".$page."&l=".$nlang);
+$template->replace("new_lang", $new_lang);
 /*
 $template->replace("title", "My Template Class");
 $template->replace("name", "William");
