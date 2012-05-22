@@ -32,6 +32,15 @@ body {
     padding: 0px 0px;
 }
 
+.logo a, .logo a:hover, .logo a:visited {
+	text-decoration: none;
+	color: #1a1a1a;
+}
+
+.logo a:hover {
+	text-decoration: underline;
+}
+
 .bigtext {
     font-size: 130%;
 }

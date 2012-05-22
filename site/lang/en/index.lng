@@ -1,0 +1,16 @@
+<?php
+$txt = array(
+    'title' => 'GetMyFil.es - Share your folder online',
+    'slog1' => 'No clouds, no uploads.',
+    'slog2' => 'Control files yourself.',
+    'contacts' => 'Contacts',
+    'terms' => 'Terms of Service',
+    'download' => 'Download',
+    'content' => 'With our service you will be able to share folder on your computer to the Internet.
+     The folder will be available as a web page, that uses a specially generated link. You can send
+     this link to another users,  who will open it in the web browser or the mobile\'s browser.
+     The link is still valid as long as the client application is running. The link will outdated
+     and access to it becomes impossible if you close or restart the client.
+    '
+);
+?>
