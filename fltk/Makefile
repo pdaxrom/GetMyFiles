@@ -69,6 +69,9 @@ ifeq (mingw32, $(SYSTEM))
 	$(STRIP) $(TARGET)
 	rm -f ../../getmyfiles-$(VERSION)-win32.zip
 	zip -9 ../../getmyfiles-$(VERSION)-win32.zip $(TARGET)
+	echo "OutFile \"../../getmyfiles-$(VERSION)-win32-installer.exe\"" > getmyfiles.nsis.inc
+	makensis getmyfiles.nsis
+	rm -f getmyfiles.nsis.inc
 endif
 ifeq (Linux, $(SYSTEM))
 	cp debian/changelog.in debian/changelog
