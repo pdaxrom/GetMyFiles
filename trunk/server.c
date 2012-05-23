@@ -424,7 +424,7 @@ static void thread_user_ping(void *argc)
 	if (users)
 	    fprintf(stderr, "Dead clients removed: %d\n", users);
 
-	sleep(5);
+	sleep(10);
     }
 }
 

@@ -1,0 +1,114 @@
+; pcio.nsi
+;
+; This script is perhaps one of the simplest NSIs you can make. All of the
+; optional settings are left to their default settings. The installer simply
+; prompts the user asking them where to install, and drops a copy of "MyProg.exe"
+; there.
+
+;--------------------------------
+
+!include "MUI.nsh"
+
+
+; The name of the installer
+Name "GetMyFiles"
+
+; The file to write
+;OutFile "getmyfiles-installer.exe"
+!include "getmyfiles.nsis.inc"
+
+; The default installation directory
+InstallDir "$PROGRAMFILES\GetMyFiles"
+
+;Get installation folder from registry if available
+InstallDirRegKey HKCU "SOFTWARE\GetMyFiles" ""
+
+;--------------------------------
+!insertmacro MUI_PAGE_WELCOME
+
+; MUI doesn't support multilanguage licenses so we have to use a old way
+;!insertmacro MUI_PAGE_LICENSE "license.txt"
+Page license
+Page directory
+
+!insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_PAGE_FINISH
+
+!insertmacro MUI_LANGUAGE "English"
+!insertmacro MUI_LANGUAGE "Russian"
+
+!insertmacro MUI_RESERVEFILE_LANGDLL
+
+LicenseLangString license ${LANG_ENGLISH} license-english.txt
+LicenseLangString license ${LANG_RUSSIAN} license-russian.txt
+LicenseData $(license)
+
+
+Function .onInit
+  ;Language selection dialog
+
+  ; MUI doesn't support multilanguage licenses so we have to use a old way
+  ;!define MUI_LANGDLL_ALLLANGUAGES
+  ;!insertmacro MUI_LANGDLL_DISPLAY
+
+  Push ""
+  Push ${LANG_ENGLISH}
+  Push English
+  Push ${LANG_RUSSIAN}
+  Push Russian
+  Push A ; A means auto count languages
+         ; for the auto count to work the first empty push (Push "") must remain
+
+  LangDLL::LangDialog "Installer Language" "Please select the language of the installer"
+
+  Pop $LANGUAGE
+  StrCmp $LANGUAGE "cancel" 0 +2
+    Abort
+FunctionEnd
+
+
+; The stuff to install
+Section "" ;No components page, name is not important
+
+; RMDIR /r $INSTDIR
+
+SetOutPath "$INSTDIR"
+
+; Put file there
+
+File getmyfiles.exe
+
+SetOutPath "$INSTDIR"
+
+;Store installation folder
+WriteRegStr HKCU "SOFTWARE\GetMyFiles" "" $INSTDIR
+
+;Create Uninstaller
+WriteUninstaller "$INSTDIR\Uninstall.exe"
+
+;Create Shortcuts
+CreateDirectory "$SMPROGRAMS\GetMyFiles"
+CreateShortCut "$SMPROGRAMS\GetMyFiles\getmyfiles.lnk" "$INSTDIR\getmyfiles.exe"
+CreateShortCut "$SMPROGRAMS\GetMyFiles\Uninstall.lnk"  "$INSTDIR\Uninstall.exe"
+CreateShortCut "$DESKTOP\getmyfiles.lnk" "$INSTDIR\getmyfiles.exe"
+
+;Create registry keys
+WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\GetMyFiles" "DisplayName"\
+"GetMyFiles"
+
+WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\GetMyFiles" "UninstallString"\
+"$INSTDIR\Uninstall.exe"
+
+SectionEnd ; end the section
+
+Section "Uninstall"
+
+RMDIR /r /REBOOTOK "$INSTDIR"
+RMDIR /r /REBOOTOK "$SMPROGRAMS\GetMyFiles"
+Delete "$DESKTOP\GetMyFiles.lnk"
+
+DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\GetMyFiles"
+DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\GetMyFiles"
+DeleteRegKey /ifempty HKCU "SOFTWARE\GetMyFiles"
+
+SectionEnd

@@ -1,0 +1,4 @@
+The service is not intended for uploading files to the shared folder from the internet.
+The service is not responsible for the content of shared files.
+The service does not accept liability for improper use of the shared files.
+The service is not responsible for the privacy of shared files.
