@@ -87,6 +87,8 @@ div.footer {
 p.copyright {
     text-align: center;
     margin: 2px;
+    font-size: 80%;
+    font-weight: bold;
 }
 
 .copyright a, .copyright a:hover, .copyright a:visited {
