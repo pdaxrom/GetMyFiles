@@ -26,6 +26,8 @@ LIBS = -g -lssl -lcrypto -lz -lwsock32 -liphlpapi -lgdi32
 endif
 
 ifeq (Darwin, $(SYSTEM))
+CC  = i686-apple-darwin10-gcc
+CXX = i686-apple-darwin10-g++
 LIBS += -lcrypto
 endif
 

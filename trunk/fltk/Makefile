@@ -7,6 +7,8 @@ ifeq (y, $(STATIC))
 LIBS		+= -lcrypto -lz -ldl -static
 endif
 ifeq (Darwin, $(SYSTEM))
+CC		 = i686-apple-darwin10-gcc
+CXX		 = i686-apple-darwin10-g++
 LIBS		+= -lcrypto
 else
 LIBS		+= -lXpm
