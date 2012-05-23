@@ -70,8 +70,10 @@ ifeq (mingw32, $(SYSTEM))
 	rm -f ../../getmyfiles-$(VERSION)-win32.zip
 	zip -9 ../../getmyfiles-$(VERSION)-win32.zip $(TARGET)
 	echo "OutFile \"../../getmyfiles-$(VERSION)-win32-installer.exe\"" > getmyfiles.nsis.inc
+	iconv -f UTF-8 -t CP1251 license-russian.txt > license-russian.txt.1251
 	makensis getmyfiles.nsis
 	rm -f getmyfiles.nsis.inc
+	rm -f license-russian.txt.1251
 endif
 ifeq (Linux, $(SYSTEM))
 	cp debian/changelog.in debian/changelog

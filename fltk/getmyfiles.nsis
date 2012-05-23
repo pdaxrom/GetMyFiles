@@ -40,7 +40,7 @@ Page directory
 !insertmacro MUI_RESERVEFILE_LANGDLL
 
 LicenseLangString license ${LANG_ENGLISH} license-english.txt
-LicenseLangString license ${LANG_RUSSIAN} license-russian.txt
+LicenseLangString license ${LANG_RUSSIAN} license-russian.txt.1251
 LicenseData $(license)
 
 
