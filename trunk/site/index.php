@@ -1,5 +1,7 @@
 <?php
 
+include "build_version.inc";
+
 setcookie ('PHPSESSID', $_COOKIE['PHPSESSID'], time() + 60 * 30, '/');
 
 session_start();
@@ -78,6 +80,7 @@ foreach ($txt as $k => $v) {
 
 $template->replace("lang_link", "?p=".$page."&l=".$nlang);
 $template->replace("new_lang", $new_lang);
+$template->replace("version", $build_version);
 /*
 $template->replace("title", "My Template Class");
 $template->replace("name", "William");
