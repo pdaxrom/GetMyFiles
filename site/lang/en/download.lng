@@ -1,0 +1,18 @@
+<?php
+$txt = array(
+    'title' => 'GetMyFil.es - Download',
+    'slog1' => 'No clouds, no uploads.',
+    'slog2' => 'Control your files yourself.',
+    'contacts' => 'Contacts',
+    'terms' => 'Terms of Service',
+    'download' => 'Download',
+    'content_win' => 'Windows clients: ',
+    'win1link' => 'Zip archive ',
+    'win2link' => 'NSIS installer ',
+    'content_lin' => 'Ubuntu/Debian clients: ',
+    'lin1link' => 'i386 deb package ',
+    'lin2link' => 'x86_64 package ',
+    'content_osx' => 'OSX clients: ',
+    'osx1link' => 'Zip archive '
+);
+?>

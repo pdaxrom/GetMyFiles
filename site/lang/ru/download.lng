@@ -1,0 +1,18 @@
+<?php
+$txt = array(
+    'title' => 'GetMyFil.es - Загрузить',
+    'slog1' => 'Без облаков, без загрузок на серверы.',
+    'slog2' => 'Все файлы находятся на компьютере.',
+    'contacts' => 'Контакты',
+    'terms' => 'Условия использования',
+    'download' => 'Загрузить',
+    'content_win' => 'Windows клиенты: ',
+    'win1link' => 'Zip архив ',
+    'win2link' => 'NSIS установщик ',
+    'content_lin' => 'Ubuntu/Debian клиенты: ',
+    'lin1link' => 'i386 deb пакет ',
+    'lin2link' => 'x86_64 deb пакет ',
+    'content_osx' => 'OSX клиенты: ',
+    'osx1link' => 'Zip архив '
+);
+?>
