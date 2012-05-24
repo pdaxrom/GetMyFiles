@@ -6,6 +6,7 @@ $txt = array(
     'contacts' => 'Contacts',
     'terms' => 'Terms of Service',
     'download' => 'Download',
+    'main' => 'Main',
     'content' => 'With our service you will be able to share folder on your computer to the Internet.
      The folder will be available as a web page, that uses a specially generated link. You can send
      this link to another users,  who will open it in the web browser or the mobile\'s browser.

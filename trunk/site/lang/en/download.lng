@@ -6,6 +6,7 @@ $txt = array(
     'contacts' => 'Contacts',
     'terms' => 'Terms of Service',
     'download' => 'Download',
+    'main' => 'Main',
     'content_win' => 'Windows clients: ',
     'win1link' => 'Zip archive ',
     'win2link' => 'NSIS installer ',

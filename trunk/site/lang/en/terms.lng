@@ -6,6 +6,7 @@ $txt = array(
     'contacts' => 'Contacts',
     'terms' => 'Terms of Service',
     'download' => 'Download',
+    'main' => 'Main',
     'content' => '<ul>
     <li>The service is not intended for uploading files to the shared folder from the internet.</li>
     <li>The service is not responsible for the content of shared files.</li>

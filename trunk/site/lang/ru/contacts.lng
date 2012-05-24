@@ -6,6 +6,7 @@ $txt = array(
     'contacts' => 'Контакты',
     'terms' => 'Условия использования',
     'download' => 'Загрузить',
+    'main' => 'Главная',
     'content' => 'Наша электропочта <a href="mailto:support@getmyfil.es">support@getmyfil.es</a>
     '
 );
