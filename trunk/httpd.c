@@ -25,6 +25,12 @@ typedef struct {
     int *exit_request;
 } client_info;
 
+#if 0
+static char direct_icon[] = {
+#include "direct-icon.h"
+};
+#endif
+
 static void thread_client(void *arg)
 {
     char buf[BUF_SIZE];
@@ -60,11 +66,26 @@ static void thread_client(void *arg)
 	    free(h_val);
 	} else if (!strcmp(url, "/js/p2p.js")) {
 	    char *resp = http_response_begin(200, "OK");
+	    char buf[BUF_SIZE];
+	    snprintf(buf, sizeof(buf), "%s", "function remove(id){ return (elem=document.getElementById(id)).parentNode.removeChild(elem); }; window.onload = function(){ remove(\"direct\"); };");
 	    http_response_add_content_type(resp, get_mimetype("p2p.js"));
-	    http_response_add_content_length(resp, 0);
+	    http_response_add_content_length(resp, strlen(buf));
 	    http_response_end(resp);
-	    tcp_write(client->c, resp, strlen(resp));
+	    if (tcp_write(client->c, resp, strlen(resp)) == strlen(resp)) {
+		tcp_write(client->c, buf, strlen(buf));
+	    }
 	    free(resp);
+#if 0
+	} else if (!strcmp(url, "/pics/wifi.png")) {
+	    char *resp = http_response_begin(200, "OK");
+	    http_response_add_content_type(resp, get_mimetype("wifi.png"));
+	    http_response_add_content_length(resp, sizeof(direct_icon));
+	    http_response_end(resp);
+	    if (tcp_write(client->c, resp, strlen(resp)) == strlen(resp)) {
+		tcp_write(client->c, direct_icon, sizeof(direct_icon));
+	    }
+	    free(resp);
+#endif
 	} else {
 	    process_page(client->c, url, buf, client->prefix, client->root, client->exit_request);
 	}

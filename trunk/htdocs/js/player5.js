@@ -157,7 +157,7 @@ var Player5 = function() {
 Player5.preinit();
 
 window.onload = function(){
-    P2P.init();
+//    P2P.init();
     Player5.init();
     Imageviewer.init();
 };
