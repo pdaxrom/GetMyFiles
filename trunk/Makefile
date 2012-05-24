@@ -74,7 +74,7 @@ install-server: $(TARGET_S)
 #	cat htdocs/js/jquery.min.js htdocs/js/jquery.jplayer.min.js > $(DESTDIR)$(WWWROOT)/js/jquery-and-jplayer.min.js
 #	install -D -m 644 htdocs/pics/play.png $(DESTDIR)$(WWWROOT)/pics/play.png
 #	install -D -m 644 htdocs/pics/stop.png $(DESTDIR)$(WWWROOT)/pics/stop.png
-	install -D -m 644 htdocs/pics/wifi.png $(DESTDIR)$(WWWROOT)/pics/wifi.png
+#	install -D -m 644 htdocs/pics/wifi.png $(DESTDIR)$(WWWROOT)/pics/wifi.png
 
 package:
 	dpkg-buildpackage -rfakeroot -b -tc || true
