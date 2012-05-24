@@ -36,6 +36,9 @@ static const char *tmpl_header_begin =
 static const char *tmpl_title =
 "<title>%s</title>";
 
+static const char *tmpl_title_error =
+"<title>%d %s</title>";
+
 static const char *tmpl_title_dir =
 "<title>Index of %s</title>";
 
@@ -88,6 +91,15 @@ static const char *tmpl_body_error =
 "<h2>Not Found</h2>"
 "<div class=\"list\">"
 "<div class=\"err\">The requested URL %s was not found on this server.</div>"
+"</div>"
+"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"</body>";
+
+static const char *tmpl_body_error_416 =
+"<body>"
+"<h2>Requested Range Not Satisfiable</h2>"
+"<div class=\"list\">"
+"<div class=\"err\">The file is already fully retrieved; nothing to do.</div>"
 "</div>"
 "<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
 "</body>";
@@ -157,6 +169,22 @@ char *http_response_add_connection(char *resp, char *token)
     return resp;
 }
 
+char *http_response_add_accept_ranges(char *resp)
+{
+    char *ptr = resp + strlen(resp);
+    snprintf(ptr, BUF_RESP_SIZE - strlen(resp), "Accept-Ranges: bytes\n");
+
+    return resp;
+}
+
+char *http_response_add_range(char *resp, size_t from, size_t to, size_t length)
+{
+    char *ptr = resp + strlen(resp);
+    snprintf(ptr, BUF_RESP_SIZE - strlen(resp), "Content-Range: bytes %lu-%lu/%lu\n", from, to, length);
+
+    return resp;
+}
+
 char *http_response_end(char *resp)
 {
     return strncat(resp, "\n", BUF_RESP_SIZE);
@@ -197,10 +225,18 @@ int send_404(tcp_channel *c, char *url)
     return 0;
 }
 
-int send_50x(tcp_channel *c, int error)
+int send_error(tcp_channel *c, int error)
 {
     char page[BUF_SIZE];
-    char *resp = http_response_begin(502, "Bad Gateway");
+    char *err_text;
+    const char *template;
+    switch (error) {
+    case 416:  err_text = "Requested Range Not Satisfiable"; template = tmpl_body_error_416; break;
+    case 502:  err_text = "Bad Gateway"; template = tmpl_body_error_502; break;
+    case 504:  err_text = "Gateway Timeout"; template = tmpl_body_error_504; break;
+    default:   err_text = "Not Implemented"; template = tmpl_body_error_501; break;
+    }
+    char *resp = http_response_begin(error, err_text);
     http_response_add_content_type(resp, "text/html; charset=UTF-8");
     http_response_add_connection(resp, "close");
     http_response_end(resp);
@@ -214,11 +250,7 @@ int send_50x(tcp_channel *c, int error)
     tcp_write(c, page, strlen(page));
     snprintf(page, sizeof(page), "%s", tmpl_header_begin);
     tcp_write(c, page, strlen(page));
-    switch (error) {
-    case 502: snprintf(page, sizeof(page), tmpl_title, "502 Bad Gateway"); break;
-    case 504: snprintf(page, sizeof(page), tmpl_title, "504 Gateway Timeout"); break;
-    default: snprintf(page, sizeof(page), tmpl_title, "501 Not Implemented"); break;
-    }
+    snprintf(page, sizeof(page), tmpl_title_error, error, err_text);
     tcp_write(c, page, strlen(page));
     snprintf(page, sizeof(page), "%s", tmpl_charset);
     tcp_write(c, page, strlen(page));
@@ -226,16 +258,34 @@ int send_50x(tcp_channel *c, int error)
     tcp_write(c, page, strlen(page));
     snprintf(page, sizeof(page), "%s", tmpl_header_end);
     tcp_write(c, page, strlen(page));
-    switch (error) {
-    case 502: snprintf(page, sizeof(page), "%s", tmpl_body_error_502); break;
-    case 504: snprintf(page, sizeof(page), "%s", tmpl_body_error_504); break;
-    default: snprintf(page, sizeof(page), "%s", tmpl_body_error_501); break;
-    }
+    snprintf(page, sizeof(page), "%s", template);
     tcp_write(c, page, strlen(page));
     snprintf(page, sizeof(page), "%s", tmpl_page_end);
     tcp_write(c, page, strlen(page));
 
     return 0;
+}
+
+char *get_request_tag(char *header, char *tag)
+{
+    char *ptr = header;
+
+    do {
+	if (!strncmp(ptr, tag, strlen(tag))) {
+	    int i = 0;
+	    ptr += strlen(tag) + 1;
+	    while (ptr[i++] >= ' ');
+	    char *ret = malloc(i);
+	    memcpy(ret, ptr, i);
+	    ret[i - 1] = 0;
+	    return ret;
+	} else
+	    while (*ptr++ > ' ');
+	while (*ptr > 0 && *ptr < ' ')
+	    ptr++;
+    } while(*ptr != 0);
+
+    return NULL;
 }
 
 static char *file_size(char *ret, int s, size_t size)
@@ -278,7 +328,7 @@ static void send_p2p_ips(tcp_channel *c)
     tcp_write(c, script_end, strlen(script_end));
 }
 
-int process_dir(tcp_channel *c, char *url, char *path, int is_root, int *exit_request)
+int process_dir(tcp_channel *c, char *url, char *http_request, char *path, int is_root, int *exit_request)
 {
     char buf[BUF_SIZE];
 
@@ -424,12 +474,40 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root, int *exit_re
 	    snprintf(page, sizeof(page), "%s", tmpl_page_end);
 	    tcp_write(c, page, strlen(page));
 	} else {
+	    size_t file_len = sb.st_size;
+	    size_t pos_from = 0;
+	    size_t pos_to = file_len - 1;
+
+	    //fprintf(stderr, "[%s]\n", http_request);
+	    char *tag_range = get_request_tag(http_request, "Range:");
+	    if (tag_range) {
+		sscanf(tag_range, "bytes=%lu-%lu", &pos_from, &pos_to);
+		if (pos_to <= 0)
+		    pos_to = file_len - 1;
+		if (pos_from < 0)
+		    pos_from = 0;
+		//fprintf(stderr, "From %lu, to %lu, size %lu\n", pos_from, pos_to, file_len);
+		free(tag_range);
+	    }
+
+	    if ((pos_from > pos_to) || (pos_to >= file_len)) {
+		send_error(c, 416);
+		return 0;
+	    }
+
 	    FILE *f = fopen(path, "rb");
 	    if (f) {
-		int r;
-		char *resp = http_response_begin(200, "OK");
+		int need_read = pos_to - pos_from + 1;
+		char *resp;
+		if ((pos_from > 0) || (pos_to != file_len - 1))
+		    resp = http_response_begin(206, "Partial Content");
+		else
+		    resp = http_response_begin(200, "OK");
 		http_response_add_content_type(resp, get_mimetype(path));
-		http_response_add_content_length(resp, sb.st_size);
+		http_response_add_content_length(resp, need_read);
+		http_response_add_accept_ranges(resp);
+		if ((pos_from > 0) || (pos_to != file_len - 1))
+		    http_response_add_range(resp, pos_from, pos_to, file_len);
 		http_response_end(resp);
 		if (tcp_write(c, resp, strlen(resp)) != strlen(resp)) {
 		    free(resp);
@@ -437,12 +515,21 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root, int *exit_re
 		    return -1;
 		}
 		free(resp);
-		while ((r = fread(buf, 1, BUF_SIZE, f)) > 0) {
-		    if (tcp_write(c, buf, r) != r)
+
+		if (pos_from > 0)
+		    fseek(f, pos_from, SEEK_SET);
+		
+		while (need_read > 0) {
+		    int len = (need_read > BUF_SIZE)?BUF_SIZE:need_read;
+		    int ret = fread(buf, 1, len, f);
+		    if (ret != len)
+			break;
+		    if (tcp_write(c, buf, ret) != ret)
 			break;
 		    if (exit_request)
 			if (*exit_request)
 			    break;
+		    need_read -= ret;
 		}
 		fclose(f);
 	    } else
@@ -453,7 +540,7 @@ int process_dir(tcp_channel *c, char *url, char *path, int is_root, int *exit_re
     return 0;
 }
 
-int process_page(tcp_channel *channel, char *url, char *dir_prefix, char *dir_root, int *exit_request)
+int process_page(tcp_channel *channel, char *url, char *http_request, char *dir_prefix, char *dir_root, int *exit_request)
 {
     char buf[BUF_SIZE];
     char *path = url_decode(url);
@@ -492,7 +579,7 @@ int process_page(tcp_channel *channel, char *url, char *dir_prefix, char *dir_ro
 	    if (normal_path[strlen(normal_path) - 1] == '\\')
 		normal_path[strlen(normal_path) - 1] = 0;
 #endif
-	    process_dir(channel, url, normal_path, is_root, exit_request);
+	    process_dir(channel, url, http_request, normal_path, is_root, exit_request);
 	} else
 	    send_404(channel, url);
 	free(normal_path);

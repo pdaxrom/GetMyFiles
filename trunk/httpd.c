@@ -25,28 +25,6 @@ typedef struct {
     int *exit_request;
 } client_info;
 
-char *get_header_tag(char *header, char *tag)
-{
-    char *ptr = header;
-
-    do {
-	if (!strncmp(ptr, tag, strlen(tag))) {
-	    int i = 0;
-	    ptr += strlen(tag) + 1;
-	    while (ptr[i++] >= ' ');
-	    char *ret = malloc(i);
-	    memcpy(ret, ptr, i);
-	    ret[i - 1] = 0;
-	    return ret;
-	} else
-	    while (*ptr++ > ' ');
-	while (*ptr > 0 && *ptr < ' ')
-	    ptr++;
-    } while(*ptr != 0);
-
-    return NULL;
-}
-
 static void thread_client(void *arg)
 {
     char buf[BUF_SIZE];
@@ -68,7 +46,7 @@ static void thread_client(void *arg)
 
 	if ((!strncmp(url, "/js/getmyfiles.js?", 18)) &&
 	    (!strncmp(url + 18, client->prefix, strlen(client->prefix)))) {
-	    char *h_val = get_header_tag(buf, "Host:");
+	    char *h_val = get_request_tag(buf, "Host:");
 	    char buf[BUF_SIZE];
 	    snprintf(buf, sizeof(buf), "P2P.go(\"%s\");", h_val);
 	    char *resp = http_response_begin(200, "OK");
@@ -88,10 +66,10 @@ static void thread_client(void *arg)
 	    tcp_write(client->c, resp, strlen(resp));
 	    free(resp);
 	} else {
-	    process_page(client->c, url, client->prefix, client->root, client->exit_request);
+	    process_page(client->c, url, buf, client->prefix, client->root, client->exit_request);
 	}
     } else
-	send_50x(client->c, 501);
+	send_error(client->c, 501);
 
     tcp_close(client->c);
     free(client);
