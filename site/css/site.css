@@ -30,15 +30,16 @@ body {
     width: 60%;
     float: left;
     padding: 0px 0px;
+    font-weight: bold;
 }
 
 .logo a, .logo a:hover, .logo a:visited {
-	text-decoration: none;
-	color: #1a1a1a;
+    text-decoration: none;
+    color: #1a1a1a;
 }
 
 .logo a:hover {
-	text-decoration: underline;
+    text-decoration: underline;
 }
 
 .bigtext {
@@ -49,20 +50,21 @@ body {
 }
 
 .menu {
-	width: 40%;
-	float: right;
+    width: 40%;
+    float: right;
 }
 
 .menu a, .menu a:hover, .menu a:visited {
-	text-decoration: none;
-	color: #1a1a1a;
-	display: block;
-	float: right;
-	padding: 5px 8px;
+    text-decoration: none;
+    color: #1a1a1a;
+    display: block;
+    float: right;
+    padding: 5px 8px;
+    font-weight: bold;
 }
 
 .menu a:hover {
-	text-decoration: underline;
+    text-decoration: underline;
 }
 
 div.list {
@@ -92,10 +94,10 @@ p.copyright {
 }
 
 .copyright a, .copyright a:hover, .copyright a:visited {
-	text-decoration: none;
-	color: #1a1a1a;
+    text-decoration: none;
+    color: #1a1a1a;
 }
 
 .copyright a:hover {
-	text-decoration: underline;
+    text-decoration: underline;
 }
