@@ -74,7 +74,7 @@ static const char *tmpl_header_end =
 
 static const char *tmpl_body_begin_dir =
 "<body>"
-"<h2>Index of %s<sup id=\"direct\" style=\"font-size:40%;cursor:pointer;\" onclick=\"P2P.init();\"> (Search for direct connection)</sup></h2>"
+"<h2>Index of %s<sup id=\"direct\" style=\"font-size:40%%;cursor:pointer;\" onclick=\"P2P.init();\"> (Search for direct connection)</sup></h2>"
 "<div class=\"list\">"
 "<table summary=\"Directory Listing\" cellpadding=\"0\" cellspacing=\"0\">"
 "<thead><tr><th class=\"n\">Name</th><th class=\"m\">Last Modified</th><th class=\"s\">Size</th><th class=\"t\">Type</th></tr></thead>"
