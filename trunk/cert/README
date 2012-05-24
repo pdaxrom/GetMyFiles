@@ -1,0 +1,7 @@
+generate new key:
+
+ openssl req -new -newkey rsa:2048 -nodes -keyout server.key -out server.csr
+
+check csr:
+
+ openssl req -in server.csr -noout -text
