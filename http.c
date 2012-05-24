@@ -397,7 +397,7 @@ int process_dir(tcp_channel *c, char *url, char *http_request, char *path, int i
 			char *name = url_encode(namelist[i]->d_name);
 			if (!(name[0] == '.' && name[1] == '.' && name[2] == 0)) {
 			    struct tm *tm = localtime(&sb.st_mtime);
-			    strftime(ftime, sizeof(ftime), "%Y-%b-%d %H-%M-%S", tm);
+			    strftime(ftime, sizeof(ftime), "%Y-%b-%d %H:%M:%S", tm);
 			} else
 			    strcpy(ftime, "");
 
