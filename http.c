@@ -58,7 +58,7 @@ static const char *tmpl_style =
 "a:visited {color: #48468F;}"
 "a:hover, a:focus {text-decoration: underline; color: red;}"
 "body {background-color: #F5F5F5;}"
-//"h2 {margin-bottom: 12px;}"
+"h2 {margin-bottom: 12px;}"
 "table {margin-left: 12px;}"
 "th, td { font: 90% monospace; text-align: left;}"
 "th { font-weight: bold; padding-right: 14px; padding-bottom: 3px;}"
