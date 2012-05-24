@@ -35,6 +35,7 @@ void *alloca(size_t);
 
 typedef struct upload_info {
     tcp_channel		*channel;
+    char		*request;
     char		key[KEY_SIZE];
     char		path[1024];
     char		*dir_prefix;
@@ -47,10 +48,11 @@ static void thread_upload(void *arg)
     upload_info *c = (upload_info *) arg;
 
     if (tcp_write(c->channel, c->key, KEY_SIZE) == KEY_SIZE) {
-	process_page(c->channel, c->path, c->dir_prefix, c->dir_root, c->exit_request);
+	process_page(c->channel, c->path, c->request, c->dir_prefix, c->dir_root, c->exit_request);
     } else
 	fprintf(stderr, "tcp_write(c->key)\n");
 
+    free(c->request);
     tcp_close(c->channel);
     free(c);
 }
@@ -198,6 +200,7 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
 			for (; (tmp[i + 4] > ' ') && (i < BUF_SIZE - KEY_SIZE - 1); i++)
 			    arg->path[i] = tmp[i + 4];
 			arg->path[i] = 0;
+			arg->request = strdup(tmp);
 
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
 			if (pthread_create(&tid, NULL, (void *) &thread_upload, (void *) arg) != 0) {
