@@ -78,6 +78,11 @@ div.list {
     padding-bottom: 14px;
 }
 
+.center {
+    display: block;
+    margin: 0 auto;
+}
+
 div.footer {
     width: 800px;
     margin-left: auto;
