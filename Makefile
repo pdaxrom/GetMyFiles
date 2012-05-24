@@ -56,6 +56,9 @@ $(TARGET_C): $(OBJS_L) $(OBJS_C)
 mime.h:
 	./create-mime.assign.pl > $@
 
+#direct-icon.h:
+#	cat htdocs/pics/wifi-on.png | hexdump -v -e '/1 "0x%02X, "' > $@
+
 clean:
 	rm -f $(TARGET_S) $(OBJS_S) $(TARGET_C) $(OBJS_C) $(OBJS_L)
 
@@ -65,6 +68,13 @@ install-server: $(TARGET_S)
 	install -D -m 755 $(TARGET_S) $(DESTDIR)/usr/sbin/$(TARGET_S)
 	install -d $(DESTDIR)$(CONFIG_DIR)
 	install -D -m 644 htdocs/js/p2p.js $(DESTDIR)$(WWWROOT)/js/p2p.js
+#	install -D -m 644 htdocs/js/player5.js $(DESTDIR)$(WWWROOT)/js/player5.js
+#	install -D -m 644 htdocs/js/imageviewer.js $(DESTDIR)$(WWWROOT)/js/imageviewer.js
+#	install -D -m 644 htdocs/js/Jplayer.swf $(DESTDIR)$(WWWROOT)/js/Jplayer.swf
+#	cat htdocs/js/jquery.min.js htdocs/js/jquery.jplayer.min.js > $(DESTDIR)$(WWWROOT)/js/jquery-and-jplayer.min.js
+#	install -D -m 644 htdocs/pics/play.png $(DESTDIR)$(WWWROOT)/pics/play.png
+#	install -D -m 644 htdocs/pics/stop.png $(DESTDIR)$(WWWROOT)/pics/stop.png
+	install -D -m 644 htdocs/pics/wifi.png $(DESTDIR)$(WWWROOT)/pics/wifi.png
 
 package:
 	dpkg-buildpackage -rfakeroot -b -tc || true

@@ -44,6 +44,6 @@ var P2P = function() {
     };
 }();
 
-window.onload = function(){
-    P2P.init();
-};
+//window.onload = function(){
+//    P2P.init();
+//};

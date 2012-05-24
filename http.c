@@ -47,8 +47,10 @@ static const char *tmpl_charset =
 
 static const char *tmpl_scripts =
 "<script type=\"text/javascript\" src=\"/js/p2p.js\"></script>";
-//"<script type=\"text/javascript\" src=\"/js/imageviewer.js\"></script>"
-//"<script type=\"text/javascript\" src=\"/js/player5.js\"></script>";
+/*
+"<script type=\"text/javascript\" src=\"/js/imageviewer.js\"></script>"
+"<script type=\"text/javascript\" src=\"/js/player5.js\"></script>";
+ */
 
 static const char *tmpl_style =
 "<style type=\"text/css\">"
@@ -56,7 +58,7 @@ static const char *tmpl_style =
 "a:visited {color: #48468F;}"
 "a:hover, a:focus {text-decoration: underline; color: red;}"
 "body {background-color: #F5F5F5;}"
-"h2 {margin-bottom: 12px;}"
+//"h2 {margin-bottom: 12px;}"
 "table {margin-left: 12px;}"
 "th, td { font: 90% monospace; text-align: left;}"
 "th { font-weight: bold; padding-right: 14px; padding-bottom: 3px;}"
@@ -72,7 +74,7 @@ static const char *tmpl_header_end =
 
 static const char *tmpl_body_begin_dir =
 "<body>"
-"<h2>Index of %s</h2>"
+"<h2>Index of %s<sup id=\"direct\" style=\"font-size:40%;cursor:pointer;\" onclick=\"P2P.init();\"> (Search for direct connection)</sup></h2>"
 "<div class=\"list\">"
 "<table summary=\"Directory Listing\" cellpadding=\"0\" cellspacing=\"0\">"
 "<thead><tr><th class=\"n\">Name</th><th class=\"m\">Last Modified</th><th class=\"s\">Size</th><th class=\"t\">Type</th></tr></thead>"
@@ -83,7 +85,7 @@ static const char *tmpl_body_end_dir =
 "</table>"
 "</div>"
 "<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
-"<script type=\"text/javascript\" src=\"http://webplayer.yahooapis.com/player.js\"></script>"
+/* "<script type=\"text/javascript\" src=\"http://webplayer.yahooapis.com/player.js\"></script>" */
 "</body>";
 
 static const char *tmpl_body_error =
