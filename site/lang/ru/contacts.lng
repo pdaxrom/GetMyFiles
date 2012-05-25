@@ -1,5 +1,6 @@
 <?php
 $txt = array(
+    'title' => 'GetMyFil.es - Контакты',
     'content' => 'Наша электропочта <a href="mailto:support@getmyfil.es">support@getmyfil.es</a>
     '
 );

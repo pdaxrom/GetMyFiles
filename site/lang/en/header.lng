@@ -1,11 +1,10 @@
 <?php
 $head_txt = array(
-    'title' => 'GetMyFil.es - Share your folder online',
     'slog1' => 'No clouds, no uploads.',
     'slog2' => 'Control your files yourself.',
     'contacts' => 'Contacts',
     'download' => 'Download',
-    'FAQ' => 'FAQ',
+    'FAQ' => 'Q&A',
     'main' => 'Main',
 );
 ?>
