@@ -5,6 +5,7 @@ $head_txt = array(
     'slog2' => 'Control your files yourself.',
     'contacts' => 'Contacts',
     'download' => 'Download',
+    'FAQ' => 'FAQ',
     'main' => 'Main',
 );
 ?>
