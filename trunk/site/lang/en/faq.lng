@@ -8,7 +8,7 @@ $txt = array(
      which make downloading more faster. However, the direct connection is not always available, for example, if the computer that is running
      the client located in the internal network or uses firewall. Also there is a known problem with Opera browser.',
     'quest2' => 'I clicked the "Search for direct connection" and my Google Chrome(Internet Explorer) display a warning about the security problem?',
-    'answer2' => 'The "Search for direct connection" use an insecurity channel, so browser give a warning. To search the connection should be allowed
+    'answer2' => 'The "Search for direct connection" works over an insecure channel, so browser give a warning. To search the connection should be allowed
      to load unprotected content. For Google Chrome press the "Load anyway" button and click "Search for direct connection" again.',
      answer2_1 => 'For Internet Explorer press the "No" button.',
 );
