@@ -1,3 +1,7 @@
+html, body {
+    text-align: center;
+}
+
 body {
     background-color: #F5F5F5;
     font-size: 90%;
@@ -31,6 +35,7 @@ body {
     float: left;
     padding: 0px 0px;
     font-weight: bold;
+    text-align: left;
 }
 
 .logo a, .logo a:hover, .logo a:visited {
@@ -63,7 +68,19 @@ body {
     font-weight: bold;
 }
 
-.menu a:hover {
+.lang {
+    float: right;
+}
+
+.lang a, .lang a:hover, .lang a:visited {
+    text-decoration: none;
+    color: #1a1a1a;
+    display: block;
+    float: right;
+    padding: 5px 8px;
+}
+
+.menu a:hover, .lang a:hover {
     text-decoration: underline;
 }
 
@@ -81,6 +98,20 @@ div.list {
 .center {
     display: block;
     margin: 0 auto;
+}
+
+.faq {
+    margin-bottom: 12px;
+}
+
+.faq img {
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+.faq_q {
+    margin-bottom: 5px;
+    font-weight: bold;
 }
 
 div.footer {
