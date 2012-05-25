@@ -69,23 +69,57 @@ if (!file_exists($lang_file)) {
     $lang_file = "lang/en/".$page.".lng";
 }
 
+$tmpl_head_file = "tmpl/header.html";
+$tmpl_foot_file = "tmpl/footer.html";
+
+$head_file = "lang/".$lang."/header.lng";
+$foot_file = "lang/".$lang."/footer.lng";
+
+include $head_file;
 include $lang_file;
+include $foot_file;
 
 $template = new Template;
 $template->load($tmpl_file);
 
+$templ_header = new Template;
+$templ_header->load($tmpl_head_file);
+
+$templ_footer = new Template;
+$templ_footer->load($tmpl_foot_file);
+
 foreach ($txt as $k => $v) {
     $template->replace($k, $v);
+    $templ_header->replace($k, $v);
+    $templ_footer->replace($k, $v);
+}
+
+foreach ($head_txt as $k => $v) {
+    $template->replace($k, $v);
+    $templ_header->replace($k, $v);
+    $templ_footer->replace($k, $v);
+}
+
+foreach ($foot_txt as $k => $v) {
+    $template->replace($k, $v);
+    $templ_header->replace($k, $v);
+    $templ_footer->replace($k, $v);
 }
 
 $template->replace("lang_link", "?p=".$page."&l=".$nlang);
 $template->replace("new_lang", $new_lang);
 $template->replace("version", $build_version);
-/*
-$template->replace("title", "My Template Class");
-$template->replace("name", "William");
-$template->replace("datetime", date("m/d/y"));
- */
 
+$templ_header->replace("lang_link", "?p=".$page."&l=".$nlang);
+$templ_header->replace("new_lang", $new_lang);
+$templ_header->replace("version", $build_version);
+
+$templ_footer->replace("lang_link", "?p=".$page."&l=".$nlang);
+$templ_footer->replace("new_lang", $new_lang);
+$templ_footer->replace("version", $build_version);
+
+
+$templ_header->publish();
 $template->publish();
+$templ_footer->publish();
 ?>
