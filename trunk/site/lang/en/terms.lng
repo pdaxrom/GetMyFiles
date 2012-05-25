@@ -1,5 +1,6 @@
 <?php
 $txt = array(
+    'title' => 'GetMyFil.es - Terms of Service',
     'content' => '<ul>
     <li>The service is not intended for uploading files to the shared folder from the internet.</li>
     <li>The service is not responsible for the content of shared files.</li>

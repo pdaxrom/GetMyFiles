@@ -1,5 +1,6 @@
 <?php
 $txt = array(
+    'title' => 'GetMyFil.es - Downloads',
     'content_win' => 'Windows clients: ',
     'win1link' => 'Zip archive ',
     'win2link' => 'NSIS installer ',
