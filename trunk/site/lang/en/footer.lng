@@ -1,0 +1,5 @@
+<?php
+$foot_txt = array(
+    'terms' => 'Terms of Service',
+);
+?>
