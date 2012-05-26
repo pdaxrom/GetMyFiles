@@ -67,7 +67,8 @@ static void thread_client(void *arg)
 	} else if (!strcmp(url, "/js/p2p.js")) {
 	    char *resp = http_response_begin(200, "OK");
 	    char buf[BUF_SIZE];
-	    snprintf(buf, sizeof(buf), "%s", "function remove(id){ return (elem=document.getElementById(id)).parentNode.removeChild(elem); }; window.onload = function(){ remove(\"direct\"); };");
+	    //snprintf(buf, sizeof(buf), "%s", "function remove(id){ return (elem=document.getElementById(id)).parentNode.removeChild(elem); }; window.onload = function(){ remove(\"direct\"); };");
+	    snprintf(buf, sizeof(buf), "%s", "// nothing yet\n");
 	    http_response_add_content_type(resp, get_mimetype("p2p.js"));
 	    http_response_add_content_length(resp, strlen(buf));
 	    http_response_end(resp);
@@ -87,7 +88,7 @@ static void thread_client(void *arg)
 	    free(resp);
 #endif
 	} else {
-	    process_page(client->c, url, buf, client->prefix, client->root, client->exit_request);
+	    process_page(client->c, url, buf, client->prefix, client->root, client->exit_request, 0);
 	}
     } else
 	send_error(client->c, 501);

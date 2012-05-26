@@ -39,6 +39,7 @@ typedef struct upload_info {
     char		*dir_prefix;
     char		*dir_root;
     int			*exit_request;
+    int			httpd_port;
 } upload_info;
 
 static void thread_upload(void *arg)
@@ -46,7 +47,7 @@ static void thread_upload(void *arg)
     upload_info *c = (upload_info *) arg;
 
     if (tcp_write(c->channel, c->key, KEY_SIZE) == KEY_SIZE) {
-	process_page(c->channel, c->path, c->request, c->dir_prefix, c->dir_root, c->exit_request);
+	process_page(c->channel, c->path, c->request, c->dir_prefix, c->dir_root, c->exit_request, c->httpd_port);
     } else
 	fprintf(stderr, "tcp_write(c->key)\n");
 
@@ -198,6 +199,7 @@ int client_connect(client_args *client)
 			    arg->path[i] = tmp[i + 4];
 			arg->path[i] = 0;
 			arg->request = strdup(tmp);
+			arg->httpd_port = h_args.port;
 
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
 			if (pthread_create(&tid, NULL, (void *) &thread_upload, (void *) arg) != 0) {
