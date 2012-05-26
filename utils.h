@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #ifdef __APPLE__
-char *_realpath(char *path, char *resolved);
+char *_realpath(const char *path, char *resolved);
 #endif
 
 #ifdef _WIN32

@@ -17,7 +17,7 @@ static struct {
 #ifdef __APPLE__
 #include <stdlib.h>
 
-char *_realpath(char *path, char *resolved)
+char *_realpath(const char *path, char *resolved)
 {
     char *ret;
     char *_ret;
