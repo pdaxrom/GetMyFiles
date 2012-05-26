@@ -72,6 +72,14 @@ static const char *tmpl_style =
 static const char *tmpl_header_end =
 "</head>";
 
+static const char *tmpl_body_begin_dir_no_dircon =
+"<body>"
+"<h2>Index of %s</h2>"
+"<div class=\"list\">"
+"<table summary=\"Directory Listing\" cellpadding=\"0\" cellspacing=\"0\">"
+"<thead><tr><th class=\"n\">Name</th><th class=\"m\">Last Modified</th><th class=\"s\">Size</th><th class=\"t\">Type</th></tr></thead>"
+"<tbody>";
+
 static const char *tmpl_body_begin_dir =
 "<body>"
 "<h2>Index of %s<sup id=\"direct\" style=\"font-size:40%%;cursor:pointer;\" onclick=\"P2P.init();\"> (Search for direct connection)</sup></h2>"
@@ -315,7 +323,7 @@ static char *file_size(char *ret, int s, size_t size)
     return ret;
 }
 
-static void send_p2p_ips(tcp_channel *c)
+static void send_p2p_ips(tcp_channel *c, int dircon_port)
 {
     static char *script_begin = "<script>var my_ips=[";
     static char *script_end = "];</script>";
@@ -323,14 +331,16 @@ static void send_p2p_ips(tcp_channel *c)
     char buf[128];
     char **ip_list = get_ipaddr_list();
     tcp_write(c, script_begin, strlen(script_begin));
-    while (ip_list[i]) {
-	snprintf(buf, sizeof(buf), "\"%s:%d\",", ip_list[i++], 8000);
-	tcp_write(c, buf, strlen(buf));
+    if (dircon_port) {
+	while (ip_list[i]) {
+	    snprintf(buf, sizeof(buf), "\"%s:%d\",", ip_list[i++], dircon_port);
+	    tcp_write(c, buf, strlen(buf));
+	}
     }
     tcp_write(c, script_end, strlen(script_end));
 }
 
-int process_dir(tcp_channel *c, char *url, char *http_request, char *path, int is_root, int *exit_request)
+int process_dir(tcp_channel *c, char *url, char *http_request, char *path, int is_root, int *exit_request, int dircon_port)
 {
     char buf[BUF_SIZE];
 
@@ -357,14 +367,17 @@ int process_dir(tcp_channel *c, char *url, char *http_request, char *path, int i
 	    tcp_write(c, page, strlen(page));
 	    snprintf(page, sizeof(page), "%s", tmpl_charset);
 	    tcp_write(c, page, strlen(page));
-	    send_p2p_ips(c);
+	    send_p2p_ips(c, dircon_port);
 	    snprintf(page, sizeof(page), "%s", tmpl_scripts);
 	    tcp_write(c, page, strlen(page));
 	    snprintf(page, sizeof(page), "%s", tmpl_style);
 	    tcp_write(c, page, strlen(page));
 	    snprintf(page, sizeof(page), "%s", tmpl_header_end);
 	    tcp_write(c, page, strlen(page));
-	    snprintf(page, sizeof(page), tmpl_body_begin_dir, d_url);
+	    if (dircon_port)
+		snprintf(page, sizeof(page), tmpl_body_begin_dir, d_url);
+	    else
+		snprintf(page, sizeof(page), tmpl_body_begin_dir_no_dircon, d_url);
 	    tcp_write(c, page, strlen(page));
 	    free(d_url);
 #ifndef _WIN32
@@ -542,7 +555,7 @@ int process_dir(tcp_channel *c, char *url, char *http_request, char *path, int i
     return 0;
 }
 
-int process_page(tcp_channel *channel, char *url, char *http_request, char *dir_prefix, char *dir_root, int *exit_request)
+int process_page(tcp_channel *channel, char *url, char *http_request, char *dir_prefix, char *dir_root, int *exit_request, int dircon_port)
 {
     char buf[BUF_SIZE];
     char *path = url_decode(url);
@@ -581,7 +594,7 @@ int process_page(tcp_channel *channel, char *url, char *http_request, char *dir_
 	    if (normal_path[strlen(normal_path) - 1] == '\\')
 		normal_path[strlen(normal_path) - 1] = 0;
 #endif
-	    process_dir(channel, url, http_request, normal_path, is_root, exit_request);
+	    process_dir(channel, url, http_request, normal_path, is_root, exit_request, dircon_port);
 	} else
 	    send_404(channel, url);
 	free(normal_path);
