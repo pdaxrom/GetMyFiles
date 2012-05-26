@@ -5,12 +5,20 @@
 extern "C" {
 #endif
 
+typedef struct {
+    const char	*host;
+    int		port;
+    const char	*root_dir;
+    int		enable_httpd;
+    int		exit_request;
+} client_args;
+
 #ifdef CLIENT_GUI
 void show_server_directory(char *str);
 void update_client(char *vers);
 #endif
 
-int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request);
+int client_connect(client_args *client);
 
 #ifdef __cplusplus
 }

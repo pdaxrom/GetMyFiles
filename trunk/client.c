@@ -22,9 +22,7 @@
 #include "http.h"
 #include "httpd.h"
 
-#ifdef CLIENT_GUI
-#include <client.h>
-#endif
+#include "client.h"
 
 #ifdef __MINGW32__
 void *alloca(size_t);
@@ -64,17 +62,13 @@ static void thread_httpd(void *arg)
     }
 }
 
-int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
+int client_connect(client_args *client)
 {
     httpd_args h_args;
     char dir_prefix[PATH_MAX];
-    char *host;
-    int port;
     int r;
 
-    host = _host;
-    port = _port;
-    char *dir_root = _realpath(_root_dir, NULL);
+    char *dir_root = _realpath(client->root_dir, NULL);
 
     fprintf(stderr, "Shared directory: %s\n", dir_root);
 
@@ -82,14 +76,14 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
     signal(SIGPIPE, SIG_IGN);
 #endif
 
-    tcp_channel *server = tcp_open(TCP_SSL_CLIENT, host, port);
+    tcp_channel *server = tcp_open(TCP_SSL_CLIENT, client->host, client->port);
     if (!server) {
 	fprintf(stderr, "tcp_open()\n");
 	free(dir_root);
 	return 1;
     }
 
-    *_exit_request = 0;
+    client->exit_request = 0;
 
     {
 	int wdt_counter;
@@ -112,9 +106,9 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
 		for (; (buf[i + 5] >= ' ') && (i < BUF_SIZE - 1); i++)
 		    dir_prefix[i] = buf[i + 5];
 		dir_prefix[i] = 0;
-		fprintf(stderr, "Server directory: https://%s:%d%s\n", host, port - 100, dir_prefix);
+		fprintf(stderr, "Server directory: https://%s:%d%s\n", client->host, client->port - 100, dir_prefix);
 #ifdef CLIENT_GUI
-		snprintf(buf, sizeof(buf), "https://%s:%d%s", host, port - 100, dir_prefix);
+		snprintf(buf, sizeof(buf), "https://%s:%d%s", client->host, client->port - 100, dir_prefix);
 		show_server_directory(buf);
 #endif
 	    } else if (!strncmp(buf, "UPD: ", 5)) {
@@ -128,16 +122,19 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
 	    }
 	}
 
-	h_args.port = 8000;
-	h_args.root = dir_root;
-	h_args.prefix = dir_prefix;
+	if (client->enable_httpd) {
+	    h_args.port = 8000;
+	    h_args.root = dir_root;
+	    h_args.prefix = dir_prefix;
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
-	if (pthread_create(&tid, NULL, (void *) &thread_httpd, (void *) &h_args) != 0) {
+	    if (pthread_create(&tid, NULL, (void *) &thread_httpd, (void *) &h_args) != 0) {
 #else
-	if (_beginthread(thread_httpd, 0, (VOID *) &h_args) == -1) {
+	    if (_beginthread(thread_httpd, 0, (VOID *) &h_args) == -1) {
 #endif
-	    fprintf(stderr, "pthread_create(thread_httpd)\n");
-	}
+		fprintf(stderr, "pthread_create(thread_httpd)\n");
+	    }
+	} else
+	    fprintf(stderr, "HTTPD disabled.\n");
 
 	wdt_counter = 0;
 
@@ -153,7 +150,7 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
 		break;
 	    }
 
-	    if (*_exit_request)
+	    if (client->exit_request)
 		break;
 
 	    // exit if no server activity more 31 sec.
@@ -191,8 +188,8 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
 		memcpy(arg->key, buf, KEY_SIZE);
 		arg->dir_root = dir_root;
 		arg->dir_prefix = dir_prefix;
-		arg->exit_request = _exit_request;
-		arg->channel = tcp_open(TCP_SSL_CLIENT, host, port + 1);
+		arg->exit_request = &client->exit_request;
+		arg->channel = tcp_open(TCP_SSL_CLIENT, client->host, client->port + 1);
 		if (arg->channel) {
 		    char *tmp = buf + KEY_SIZE;
 		    if (!strncmp(tmp, "GET ", 4)) {
@@ -236,10 +233,9 @@ int client_connect(char *_host, int _port, char *_root_dir, int *_exit_request)
 #ifndef CLIENT_GUI
 int main(int argc, char *argv[])
 {
-    char *host;
-    int port;
-    char *dir_root;
-    int exit_request = 0;
+    client_args client;
+    client.exit_request = 0;
+    client.enable_httpd = 1;
 
 #if 0
     if (argc < 3) {
@@ -247,20 +243,20 @@ int main(int argc, char *argv[])
 	return 1;
     }
 
-    host = argv[1];
-    port = atoi(argv[2]);
-    dir_root = argv[3];
+    client.host = argv[1];
+    client.port = atoi(argv[2]);
+    client.root_dir = argv[3];
 #else
     if (argc < 2) {
 	fprintf(stderr, "%s <directory>\n", argv[0]);
 	return 1;
     }
 
-    host = "getmyfil.es";
-    port = 8100;
-    dir_root = argv[1];
+    client.host = "getmyfil.es";
+    client.port = 8100;
+    client.root_dir = argv[1];
 #endif
 
-    return client_connect(host, port, dir_root, &exit_request);
+    return client_connect(&client);
 }
 #endif

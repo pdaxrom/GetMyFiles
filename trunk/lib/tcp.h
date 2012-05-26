@@ -30,7 +30,7 @@ typedef struct _tcp_channel {
 
 #define tcp_fd(u) (u->s)
 
-tcp_channel *tcp_open(int mode, char *addr, int port);
+tcp_channel *tcp_open(int mode, const char *addr, int port);
 tcp_channel *tcp_accept(tcp_channel *u);
 int tcp_read(tcp_channel *u, char *buf, size_t len);
 int tcp_write(tcp_channel *u, char *buf, size_t len);

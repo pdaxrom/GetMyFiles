@@ -40,7 +40,7 @@ char *_realpath(char *path, char *resolved)
 #endif
 
 #ifdef _WIN32
-char *realpath(char *path, char *resolved)
+char *realpath(const char *path, char *resolved)
 {
     char *ret;
     char *_ret;
