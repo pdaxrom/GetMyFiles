@@ -102,13 +102,15 @@ static void user_del(user_info *info)
 
 static void users_dump(void)
 {
+    int total = 0;
     user_info *tmp = first_user;
     fprintf(stderr, "-------------------------\n");
     while (tmp) {
 	fprintf(stderr, "Client: %s\n", tmp->name);
 	tmp = tmp->next;
+	total++;
     }
-    fprintf(stderr, "-------------------------\n\n");
+    fprintf(stderr, "-------------------------\nTotal: %d\n\n", total);
 }
 
 static user_info *user_get(char *name)
