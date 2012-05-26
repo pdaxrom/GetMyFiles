@@ -208,6 +208,7 @@ Fl_Double_Window* make_window() {
 void set_online() {
   fConnected = 1;
   browseButton->deactivate();
+  confButton->deactivate();
   //urlButton->value("Online");
   connectButton->value(1);
 }
@@ -215,6 +216,7 @@ void set_online() {
 void set_offline() {
   fConnected = 0;
   browseButton->activate();
+  confButton->activate();
   //urlButton->value("Online");
   connectButton->value(0);
   urlText->value("");

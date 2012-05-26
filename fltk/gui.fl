@@ -96,7 +96,7 @@ Function {make_window()} {open C
 //		shareButton->value(0);
 		urlText->value("");
 	}
-}} selected
+}}
       xywh {455 45 75 25} selection_color 88
     }
     Fl_Box infoStr {
@@ -120,6 +120,7 @@ Function {set_online()} {open C
 } {
   code {fConnected = 1;
 browseButton->deactivate();
+confButton->deactivate();
 //urlButton->value("Online");
 connectButton->value(1);} {}
 } 
@@ -128,9 +129,11 @@ Function {set_offline()} {open C
 } {
   code {fConnected = 0;
 browseButton->activate();
+confButton->activate();
 //urlButton->value("Online");
 connectButton->value(0);
-urlText->value("");} {}
+urlText->value("");} {selected
+  }
 } 
 
 Function {show_server_directory(char *dir)} {open C
