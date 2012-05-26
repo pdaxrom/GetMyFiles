@@ -57,12 +57,14 @@ static void cb_connectButton(Fl_Light_Button*, void*) {
 #endif
 	if (fConnected) {
 		browseButton->deactivate();
+		confButton->deactivate();
 //		shareButton->value(1);
 	}
 } else {
 	fConnected = offline_client();
 	if (!fConnected) {
 		browseButton->activate();
+		confButton->activate();
 //		shareButton->value(0);
 		urlText->value("");
 	}

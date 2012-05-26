@@ -29,7 +29,7 @@ decl {Fl_Preferences prefs_(Fl_Preferences::USER, "fltk.org", "getmyfiles");} {p
 Function {make_window()} {open C
 } {
   Fl_Window {} {
-    label {GetMyFil.es} open selected
+    label {GetMyFil.es} open
     xywh {835 252 535 110} type Double align 80 size_range {535 110 535 110} visible
   } {
     Fl_Button closeButton {
@@ -85,16 +85,18 @@ Function {make_window()} {open C
 \#endif
 	if (fConnected) {
 		browseButton->deactivate();
+		confButton->deactivate();
 //		shareButton->value(1);
 	}
 } else {
 	fConnected = offline_client();
 	if (!fConnected) {
 		browseButton->activate();
+		confButton->activate();
 //		shareButton->value(0);
 		urlText->value("");
 	}
-}}
+}} selected
       xywh {455 45 75 25} selection_color 88
     }
     Fl_Box infoStr {

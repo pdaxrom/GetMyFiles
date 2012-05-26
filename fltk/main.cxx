@@ -19,7 +19,7 @@
 
 char infoText[128];
 
-static int exit_request;
+static client_args client;
 
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
 static void *thread_client(void *arg)
@@ -27,12 +27,8 @@ static void *thread_client(void *arg)
 static void thread_client(void *arg)
 #endif
 {
-    char *host = "getmyfil.es";
-    int port = 8100;
-
-    exit_request = 0;
     set_online();
-    client_connect(host, port, (char *) arg, &exit_request);
+    client_connect((client_args *) arg);
     set_offline();
 
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
@@ -52,10 +48,19 @@ int online_client(const char *path)
 	return 0;
     }
 
+    int val;
+    prefs_.get("httpd", val, 1);
+    client.enable_httpd = val;
+
+    client.host = "getmyfil.es";
+    client.port = 8100;
+    client.root_dir = path;
+    client.exit_request = 0;
+
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
-    if (pthread_create(&tid, NULL, &thread_client, (void *) path) != 0) {
+    if (pthread_create(&tid, NULL, &thread_client, (void *) &client) != 0) {
 #else
-    if ((int)_beginthread(thread_client, 0, (VOID *) path) == -1) {
+    if ((int)_beginthread(thread_client, 0, (VOID *) &client) == -1) {
 #endif
 	fprintf(stderr, "Can't create client's thread\n");
 	return 0;
@@ -66,7 +71,7 @@ int online_client(const char *path)
 
 int offline_client(void)
 {
-    exit_request = 1;
+    client.exit_request = 1;
     return 0;
 }
 

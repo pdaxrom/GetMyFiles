@@ -127,7 +127,7 @@ static void ssl_tear_down(SSL_CTX *ctx)
 	SSL_CTX_free(ctx);
 }
 
-tcp_channel *tcp_open(int mode, char *addr, int port)
+tcp_channel *tcp_open(int mode, const char *addr, int port)
 {
 #ifdef _WIN32
     if (winsock_init())
