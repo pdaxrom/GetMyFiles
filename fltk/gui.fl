@@ -5,6 +5,9 @@ code_name {.cxx}
 decl {\#include <FL/Fl_Native_File_Chooser.H>} {public global
 } 
 
+decl {\#include <FL/Fl_Preferences.H>} {public global
+} 
+
 decl {\#include "../utils.h"} {private local
 } 
 
@@ -15,6 +18,12 @@ decl {int online_client(const char *path);} {public global
 } 
 
 decl {int offline_client(void);} {public global
+} 
+
+decl {extern Fl_Preferences prefs_;} {public global
+} 
+
+decl {Fl_Preferences prefs_(Fl_Preferences::USER, "fltk.org", "getmyfiles");} {private global
 } 
 
 Function {make_window()} {open C
@@ -85,12 +94,22 @@ Function {make_window()} {open C
 //		shareButton->value(0);
 		urlText->value("");
 	}
-}} selected
+}}
       xywh {455 45 75 25} selection_color 88
     }
     Fl_Box infoStr {
       label {ItsMyFile client}
       xywh {5 80 445 25}
+    }
+    Fl_Button confButton {
+      callback {int val;
+Fl_Double_Window *w = make_conf_window();
+prefs_.get("httpd", val, 1);
+enableHttpd->value(val);
+prefs_.get("max_conn", val, 0);
+maxClients->value(val);
+w->show();}
+      xywh {5 80 25 25}
     }
   }
 } 
@@ -120,4 +139,29 @@ Function {show_server_directory(char *dir)} {open C
 Function {show_shared_directory(char *dir)} {open C
 } {
   code {folderText->value(dir);} {}
+} 
+
+Function {make_conf_window()} {open
+} {
+  Fl_Window {} {
+    label Settings open
+    xywh {541 506 310 95} type Double modal visible
+  } {
+    Fl_Spinner maxClients {
+      label {Maximum number of connections}
+      xywh {5 5 55 25} align 8 minimum 0 maximum 999
+    }
+    Fl_Check_Button enableHttpd {
+      label {Enable direct connection to this client}
+      xywh {5 35 300 25} down_box DOWN_BOX
+    }
+    Fl_Button closeConfButton {
+      label Close
+      callback {prefs_.set("httpd", enableHttpd->value());
+prefs_.set("max_conn", maxClients->value());
+o->parent()->hide();
+delete(o->parent());}
+      xywh {230 65 75 25}
+    }
+  }
 } 
