@@ -4,8 +4,10 @@
 #define gui_h
 #include <FL/Fl.H>
 #include <FL/Fl_Native_File_Chooser.H>
+#include <FL/Fl_Preferences.H>
 int online_client(const char *path); 
 int offline_client(void); 
+extern Fl_Preferences prefs_;
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
 extern Fl_Button *closeButton;
@@ -17,9 +19,16 @@ extern Fl_Output *folderText;
 extern Fl_Light_Button *connectButton;
 #include <FL/Fl_Box.H>
 extern Fl_Box *infoStr;
+extern Fl_Button *confButton;
 extern "C" { Fl_Double_Window* make_window(); }
 extern "C" { void set_online(); }
 extern "C" { void set_offline(); }
 extern "C" { void show_server_directory(char *dir); }
 extern "C" { void show_shared_directory(char *dir); }
+#include <FL/Fl_Spinner.H>
+extern Fl_Spinner *maxClients;
+#include <FL/Fl_Check_Button.H>
+extern Fl_Check_Button *enableHttpd;
+extern Fl_Button *closeConfButton;
+Fl_Double_Window* make_conf_window();
 #endif

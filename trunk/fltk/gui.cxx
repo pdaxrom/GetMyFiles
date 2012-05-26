@@ -3,6 +3,7 @@
 #include "gui.h"
 #include "../utils.h"
 static int fConnected = 0; 
+Fl_Preferences prefs_(Fl_Preferences::USER, "fltk.org", "getmyfiles"); 
 
 Fl_Button *closeButton=(Fl_Button *)0;
 
@@ -70,6 +71,18 @@ static void cb_connectButton(Fl_Light_Button*, void*) {
 
 Fl_Box *infoStr=(Fl_Box *)0;
 
+Fl_Button *confButton=(Fl_Button *)0;
+
+static void cb_confButton(Fl_Button*, void*) {
+  int val;
+Fl_Double_Window *w = make_conf_window();
+prefs_.get("httpd", val, 1);
+enableHttpd->value(val);
+prefs_.get("max_conn", val, 0);
+maxClients->value(val);
+w->show();
+}
+
 Fl_Double_Window* make_window() {
   Fl_Double_Window* w;
   { Fl_Double_Window* o = new Fl_Double_Window(535, 110, "GetMyFil.es");
@@ -91,6 +104,9 @@ Fl_Double_Window* make_window() {
     } // Fl_Light_Button* connectButton
     { infoStr = new Fl_Box(5, 80, 445, 25, "ItsMyFile client");
     } // Fl_Box* infoStr
+    { confButton = new Fl_Button(5, 80, 25, 25);
+      confButton->callback((Fl_Callback*)cb_confButton);
+    } // Fl_Button* confButton
     o->size_range(535, 110, 535, 110);
     o->end();
   } // Fl_Double_Window* o
@@ -118,4 +134,38 @@ void show_server_directory(char *dir) {
 
 void show_shared_directory(char *dir) {
   folderText->value(dir);
+}
+
+Fl_Spinner *maxClients=(Fl_Spinner *)0;
+
+Fl_Check_Button *enableHttpd=(Fl_Check_Button *)0;
+
+Fl_Button *closeConfButton=(Fl_Button *)0;
+
+static void cb_closeConfButton(Fl_Button* o, void*) {
+  prefs_.set("httpd", enableHttpd->value());
+prefs_.set("max_conn", maxClients->value());
+o->parent()->hide();
+delete(o->parent());
+}
+
+Fl_Double_Window* make_conf_window() {
+  Fl_Double_Window* w;
+  { Fl_Double_Window* o = new Fl_Double_Window(310, 95, "Settings");
+    w = o;
+    { maxClients = new Fl_Spinner(5, 5, 55, 25, "Maximum number of connections");
+      maxClients->minimum(0);
+      maxClients->maximum(999);
+      maxClients->align(Fl_Align(FL_ALIGN_RIGHT));
+    } // Fl_Spinner* maxClients
+    { enableHttpd = new Fl_Check_Button(5, 35, 300, 25, "Enable direct connection to this client");
+      enableHttpd->down_box(FL_DOWN_BOX);
+    } // Fl_Check_Button* enableHttpd
+    { closeConfButton = new Fl_Button(230, 65, 75, 25, "Close");
+      closeConfButton->callback((Fl_Callback*)cb_closeConfButton);
+    } // Fl_Button* closeConfButton
+    o->set_modal();
+    o->end();
+  } // Fl_Double_Window* o
+  return w;
 }
