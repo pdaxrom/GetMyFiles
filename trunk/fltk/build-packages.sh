@@ -12,9 +12,11 @@ export PATH=/opt/fltk/1.3.0-mingw32/bin:/opt/i686-mingw32/toolchain/bin:$OLD_PAT
 make SYSTEM=mingw32 package
 make SYSTEM=mingw32 clean
 
-export PATH=$OLD_PATH
 
 sleep 1
 
+export PATH=/opt/fltk/1.3.0/bin:$OLD_PATH
 make package
 make clean
+
+export PATH=$OLD_PATH
