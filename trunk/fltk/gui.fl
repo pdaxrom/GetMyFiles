@@ -29,7 +29,7 @@ decl {Fl_Preferences prefs_(Fl_Preferences::USER, "fltk.org", "getmyfiles");} {p
 Function {make_window()} {open C
 } {
   Fl_Window {} {
-    label {GetMyFil.es} open
+    label {GetMyFil.es} open selected
     xywh {835 252 535 110} type Double align 80 size_range {535 110 535 110} visible
   } {
     Fl_Button closeButton {
@@ -109,7 +109,7 @@ enableHttpd->value(val);
 prefs_.get("max_conn", val, 0);
 maxClients->value(val);
 w->show();}
-      xywh {5 80 25 25}
+      image {icon/preferences-system.png} xywh {5 80 25 25}
     }
   }
 } 
