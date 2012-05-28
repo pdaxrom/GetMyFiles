@@ -118,9 +118,8 @@ int main(int argc, char *argv[])
     w->show();
 
     for (;;) {
-	Fl::wait(0);
+	Fl::wait(0.2);
 	if (show_update_window) {
-	    fprintf(stderr, "ssssss\n");
 	    Fl_Double_Window *update_window = make_update_window();
 	    updateStr->label(infoText);
 	    update_window->show();
