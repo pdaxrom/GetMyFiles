@@ -37,7 +37,7 @@ TARGET = getmyfiles$(EXEEXT)
 all: $(TARGET)
 
 OBJS_G = main.o gui.o
-OBJS_C = ../client.o ../urldecode.o ../http.o ../utils.o ../httpd.o ../getaddr.o
+OBJS_C = ../client.o ../urldecode.o ../http.o ../utils.o ../httpd.o ../getaddr.o ../connctrl.o
 OBJS_L = ../lib/tcp.o ../lib/udp.o ../lib/aes.o
 
 ifeq (mingw32, $(SYSTEM))

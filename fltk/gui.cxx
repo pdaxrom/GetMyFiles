@@ -245,17 +245,17 @@ delete(o->parent());
 
 Fl_Double_Window* make_conf_window() {
   Fl_Double_Window* w;
-  { Fl_Double_Window* o = new Fl_Double_Window(310, 95, "Settings");
+  { Fl_Double_Window* o = new Fl_Double_Window(415, 105, "Settings");
     w = o;
-    { maxClients = new Fl_Spinner(5, 5, 55, 25, "Maximum number of connections");
+    { maxClients = new Fl_Spinner(5, 5, 55, 25, "Maximum number of connections (0 = unlimited)");
       maxClients->minimum(0);
       maxClients->maximum(999);
       maxClients->align(Fl_Align(FL_ALIGN_RIGHT));
     } // Fl_Spinner* maxClients
-    { enableHttpd = new Fl_Check_Button(5, 35, 300, 25, "Enable direct connection to this client");
+    { enableHttpd = new Fl_Check_Button(5, 40, 300, 25, "Enable direct connection to this client");
       enableHttpd->down_box(FL_DOWN_BOX);
     } // Fl_Check_Button* enableHttpd
-    { closeConfButton = new Fl_Button(230, 65, 75, 25, "Close");
+    { closeConfButton = new Fl_Button(335, 75, 75, 25, "Close");
       closeConfButton->callback((Fl_Callback*)cb_closeConfButton);
     } // Fl_Button* closeConfButton
     o->set_modal();

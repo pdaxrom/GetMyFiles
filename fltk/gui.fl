@@ -132,8 +132,7 @@ browseButton->activate();
 confButton->activate();
 //urlButton->value("Online");
 connectButton->value(0);
-urlText->value("");} {selected
-  }
+urlText->value("");} {}
 } 
 
 Function {show_server_directory(char *dir)} {open C
@@ -149,16 +148,16 @@ Function {show_shared_directory(char *dir)} {open C
 Function {make_conf_window()} {open
 } {
   Fl_Window {} {
-    label Settings open
-    xywh {541 506 310 95} type Double modal visible
+    label Settings open selected
+    xywh {541 506 415 105} type Double modal visible
   } {
     Fl_Spinner maxClients {
-      label {Maximum number of connections}
+      label {Maximum number of connections (0 = unlimited)}
       xywh {5 5 55 25} align 8 minimum 0 maximum 999
     }
     Fl_Check_Button enableHttpd {
       label {Enable direct connection to this client}
-      xywh {5 35 300 25} down_box DOWN_BOX
+      xywh {5 40 300 25} down_box DOWN_BOX
     }
     Fl_Button closeConfButton {
       label Close
@@ -166,7 +165,7 @@ Function {make_conf_window()} {open
 prefs_.set("max_conn", maxClients->value());
 o->parent()->hide();
 delete(o->parent());}
-      xywh {230 65 75 25}
+      xywh {335 75 75 25}
     }
   }
 } 
