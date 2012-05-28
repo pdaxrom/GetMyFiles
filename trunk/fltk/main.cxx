@@ -17,7 +17,8 @@
 #include <FL/fl_ask.H>
 #include "client.h"
 
-char infoText[128];
+static char infoText[128];
+static int show_update_window;
 
 static client_args client;
 
@@ -48,6 +49,8 @@ int online_client(const char *path)
 	return 0;
     }
 
+    show_update_window = 0;
+
     int val;
     prefs_.get("httpd", val, 1);
     client.enable_httpd = val;
@@ -76,22 +79,19 @@ int online_client(const char *path)
 int offline_client(void)
 {
     client.exit_request = 1;
+
     return 0;
 }
 
 void update_client(char *vers)
 {
-    snprintf(infoText, sizeof(infoText), "Please update this client to version %s or better!", vers);
-    infoStr->label(infoText);
-#ifdef _WIN32
-    fl_message(infoText);
-#endif
+    snprintf(infoText, sizeof(infoText), "Please update this client to\n version %s or better!", vers);
+    show_update_window = 1;
 }
 
 int main(int argc, char *argv[])
 {
     Fl_Double_Window *w = make_window();
-//    w->show(argc, argv);
 
     snprintf(infoText, sizeof(infoText), "GetMyFil.es client version %.02f", VERSION);
     infoStr->label(infoText);
@@ -117,5 +117,16 @@ int main(int argc, char *argv[])
 
     w->show();
 
-    return Fl::run();
+    for (;;) {
+	Fl::wait(0);
+	if (show_update_window) {
+	    fprintf(stderr, "ssssss\n");
+	    Fl_Double_Window *update_window = make_update_window();
+	    updateStr->label(infoText);
+	    update_window->show();
+	    show_update_window = 0;
+	}
+    }
+
+    return 0;
 }

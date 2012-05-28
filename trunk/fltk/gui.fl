@@ -8,6 +8,9 @@ decl {\#include <FL/Fl_Native_File_Chooser.H>} {public global
 decl {\#include <FL/Fl_Preferences.H>} {public global
 } 
 
+decl {\#include <FL/filename.H>} {private local
+} 
+
 decl {\#include "../utils.h"} {private local
 } 
 
@@ -142,14 +145,16 @@ Function {show_server_directory(char *dir)} {open C
 
 Function {show_shared_directory(char *dir)} {open C
 } {
-  code {folderText->value(dir);} {}
+  code {folderText->value(dir);
+folderText->redraw();} {selected
+  }
 } 
 
 Function {make_conf_window()} {open
 } {
   Fl_Window {} {
-    label Settings open selected
-    xywh {541 506 415 105} type Double modal visible
+    label Settings open
+    xywh {394 252 415 105} type Double modal visible
   } {
     Fl_Spinner maxClients {
       label {Maximum number of connections (0 = unlimited)}
@@ -166,6 +171,24 @@ prefs_.set("max_conn", maxClients->value());
 o->parent()->hide();
 delete(o->parent());}
       xywh {335 75 75 25}
+    }
+  }
+} 
+
+Function {make_update_window()} {open
+} {
+  Fl_Window {} {open
+    xywh {377 615 295 110} type Double modal visible
+  } {
+    Fl_Button updateButton {
+      label {More...}
+      callback {fl_open_uri("http://getmyfil.es/?p=download");
+exit(0);}
+      xywh {215 80 75 25}
+    }
+    Fl_Box updateStr {
+      label {Please update this client to version or better}
+      image {icon/stop.png} xywh {0 0 290 75} align 384
     }
   }
 } 
