@@ -6,6 +6,7 @@ typedef struct {
     char	*prefix;
     int		port;
     int		exit_request;
+    int		max_conns;
 } httpd_args;
 
 int httpd_main(httpd_args *args);
