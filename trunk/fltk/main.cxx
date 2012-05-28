@@ -52,6 +52,10 @@ int online_client(const char *path)
     prefs_.get("httpd", val, 1);
     client.enable_httpd = val;
 
+    prefs_.get("max_conn", val, 0);
+    client.max_ext_conns = val;
+    client.max_int_conns = val;
+
     client.host = "getmyfil.es";
     client.port = 8100;
     client.root_dir = path;
