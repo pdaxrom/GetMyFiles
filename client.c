@@ -23,6 +23,7 @@
 #include "httpd.h"
 
 #include "client.h"
+#include "connctrl.h"
 
 #ifdef __MINGW32__
 void *alloca(size_t);
@@ -47,7 +48,12 @@ static void thread_upload(void *arg)
     upload_info *c = (upload_info *) arg;
 
     if (tcp_write(c->channel, c->key, KEY_SIZE) == KEY_SIZE) {
-	process_page(c->channel, c->path, c->request, c->dir_prefix, c->dir_root, c->exit_request, c->httpd_port);
+	if (!conn_counter_limit()) {
+	    conn_counter_inc();
+	    process_page(c->channel, c->path, c->request, c->dir_prefix, c->dir_root, c->exit_request, c->httpd_port);
+	    conn_counter_dec();
+	} else
+	    send_error(c->channel, 503);
     } else
 	fprintf(stderr, "tcp_write(c->key)\n");
 
@@ -84,6 +90,7 @@ int client_connect(client_args *client)
 	return 1;
     }
 
+    conn_counter_init(client->max_conns);
     client->exit_request = 0;
 
     {
@@ -219,6 +226,8 @@ int client_connect(client_args *client)
  exit1:
     fprintf(stderr, "Exit...\n");
 
+    conn_counter_fini();
+
     h_args.exit_request = 1;
 #ifdef _WIN32
     Sleep(1000);
@@ -236,6 +245,7 @@ int client_connect(client_args *client)
 int main(int argc, char *argv[])
 {
     client_args client;
+    client.max_conns = 2;
     client.exit_request = 0;
     client.enable_httpd = 1;
 
