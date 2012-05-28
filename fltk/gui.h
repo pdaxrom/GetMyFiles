@@ -31,4 +31,7 @@ extern Fl_Spinner *maxClients;
 extern Fl_Check_Button *enableHttpd;
 extern Fl_Button *closeConfButton;
 Fl_Double_Window* make_conf_window();
+extern Fl_Button *updateButton;
+extern Fl_Box *updateStr;
+Fl_Double_Window* make_update_window();
 #endif
