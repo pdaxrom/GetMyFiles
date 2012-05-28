@@ -5,11 +5,17 @@
 extern "C" {
 #endif
 
-void conn_counter_init(int _max_cnt);
-void conn_counter_fini(void);
-void conn_counter_inc(void);
-void conn_counter_dec(void);
-int  conn_counter_limit(void);
+enum {
+    CONN_EXT = 0,
+    CONN_INT,
+    CONN_TYPE_MAX
+};
+
+void conn_counter_init(int type, int _max_cnt);
+void conn_counter_fini(int type);
+void conn_counter_inc(int type);
+void conn_counter_dec(int type);
+int  conn_counter_limit(int type);
 
 #ifdef __cplusplus
 }

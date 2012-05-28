@@ -10,7 +10,8 @@ typedef struct {
     int		port;
     const char	*root_dir;
     int		enable_httpd;
-    int		max_conns;
+    int		max_ext_conns;
+    int		max_int_conns;
     int		exit_request;
 } client_args;
 

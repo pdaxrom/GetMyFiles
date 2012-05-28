@@ -15,6 +15,7 @@
 #include "http.h"
 #include "httpd.h"
 #include "utils.h"
+#include "connctrl.h"
 
 #define BUF_SIZE	1024
 
@@ -42,13 +43,17 @@ static void thread_client(void *arg)
 //	fprintf(stderr, "local httpd [%s]\n", buf);
     }
 
-    if (!strncmp(buf, "GET ", 4)) {
+    if (conn_counter_limit(CONN_INT))
+	send_error(client->c, 503);
+    else if (!strncmp(buf, "GET ", 4)) {
 	int i = 0;
 	char url[BUF_SIZE];
 	memset(url, 0, sizeof(url));
 	for (; (buf[i + 4] > ' ') && (i < BUF_SIZE - 1); i++)
 	    url[i] = buf[i + 4];
 	url[i] = 0;
+
+	conn_counter_inc(CONN_INT);
 
 	if ((!strncmp(url, "/js/getmyfiles.js?", 18)) &&
 	    (!strncmp(url + 18, client->prefix, strlen(client->prefix)))) {
@@ -90,6 +95,7 @@ static void thread_client(void *arg)
 	} else {
 	    process_page(client->c, url, buf, client->prefix, client->root, client->exit_request, 0);
 	}
+	conn_counter_dec(CONN_INT);
     } else
 	send_error(client->c, 501);
 
@@ -105,6 +111,7 @@ int httpd_main(httpd_args *args)
 	return 1;
     }
 
+    conn_counter_init(CONN_INT, args->max_conns);
     args->exit_request = 0;
 
     fprintf(stderr, "Starting local httpd http://localhost:%d%s -> %s\n", args->port, args->prefix, args->root);
@@ -153,6 +160,8 @@ int httpd_main(httpd_args *args)
 	    break;
 	}
     }
+
+    conn_counter_fini(CONN_INT);
 
     tcp_close(server);
 

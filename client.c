@@ -48,10 +48,10 @@ static void thread_upload(void *arg)
     upload_info *c = (upload_info *) arg;
 
     if (tcp_write(c->channel, c->key, KEY_SIZE) == KEY_SIZE) {
-	if (!conn_counter_limit()) {
-	    conn_counter_inc();
+	if (!conn_counter_limit(CONN_EXT)) {
+	    conn_counter_inc(CONN_EXT);
 	    process_page(c->channel, c->path, c->request, c->dir_prefix, c->dir_root, c->exit_request, c->httpd_port);
-	    conn_counter_dec();
+	    conn_counter_dec(CONN_EXT);
 	} else
 	    send_error(c->channel, 503);
     } else
@@ -90,7 +90,7 @@ int client_connect(client_args *client)
 	return 1;
     }
 
-    conn_counter_init(client->max_conns);
+    conn_counter_init(CONN_EXT, client->max_ext_conns);
     client->exit_request = 0;
 
     {
@@ -134,6 +134,7 @@ int client_connect(client_args *client)
 	    h_args.port = 8000;
 	    h_args.root = dir_root;
 	    h_args.prefix = dir_prefix;
+	    h_args.max_conns = client->max_int_conns;
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
 	    if (pthread_create(&tid, NULL, (void *) &thread_httpd, (void *) &h_args) != 0) {
 #else
@@ -226,7 +227,7 @@ int client_connect(client_args *client)
  exit1:
     fprintf(stderr, "Exit...\n");
 
-    conn_counter_fini();
+    conn_counter_fini(CONN_EXT);
 
     h_args.exit_request = 1;
 #ifdef _WIN32
@@ -245,7 +246,8 @@ int client_connect(client_args *client)
 int main(int argc, char *argv[])
 {
     client_args client;
-    client.max_conns = 0;
+    client.max_ext_conns = 2;
+    client.max_int_conns = 2;
     client.exit_request = 0;
     client.enable_httpd = 1;
 
