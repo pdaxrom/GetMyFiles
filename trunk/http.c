@@ -132,6 +132,15 @@ static const char *tmpl_body_error_502 =
 "<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
 "</body>";
 
+static const char *tmpl_body_error_503 =
+"<body>"
+"<h2>Service Unavailable</h2>"
+"<div class=\"list\">"
+"<div class=\"err\">The server is currently unable to handle the request due to a temporary overloading(maximum connections reached).</div>"
+"</div>"
+"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"</body>";
+
 static const char *tmpl_body_error_504 =
 "<body>"
 "<h2>Gateway Timeout</h2>"
@@ -243,6 +252,7 @@ int send_error(tcp_channel *c, int error)
     switch (error) {
     case 416:  err_text = "Requested Range Not Satisfiable"; template = tmpl_body_error_416; break;
     case 502:  err_text = "Bad Gateway"; template = tmpl_body_error_502; break;
+    case 503:  err_text = "Service Unavailable"; template = tmpl_body_error_503; break;
     case 504:  err_text = "Gateway Timeout"; template = tmpl_body_error_504; break;
     default:   err_text = "Not Implemented"; template = tmpl_body_error_501; break;
     }
