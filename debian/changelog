@@ -1,6 +1,6 @@
-getmyfiles-server (0.92) unstable; urgency=low
+getmyfiles-server (0.93) unstable; urgency=low
 
   * Debian build rules.
 
- -- Support Team <support@getmyfil.es>  Mon, 24 May 2012 16:01:32 +0700
+ -- Support Team <support@getmyfil.es>  Mon, 28 May 2012 15:12:32 +0700
 
