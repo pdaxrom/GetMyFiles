@@ -245,7 +245,7 @@ int client_connect(client_args *client)
 int main(int argc, char *argv[])
 {
     client_args client;
-    client.max_conns = 2;
+    client.max_conns = 0;
     client.exit_request = 0;
     client.enable_httpd = 1;
 
