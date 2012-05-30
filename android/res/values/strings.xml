@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="selectfolder">Folder to share</string>
+    <string name="shareurl">Link to shared folder</string>
+    <string name="app_name">GetMyFiles</string>
+	<string name="pathButton">...</string>
+	<string name="nodata">No data</string>
+	<string name="seldirtext">Select directory to share</string>
+	<string name="filebrowser_name">Select a folder</string>	
+</resources>
