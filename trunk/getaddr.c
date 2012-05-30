@@ -11,10 +11,38 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <ifaddrs.h>
+ #ifndef ANDROID
+ #include <ifaddrs.h>
+ #else
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+ #endif
 #endif
 
 static char **ip_list = NULL;
+
+#ifdef ANDROID
+static int get_iface_list(struct ifconf *ifconf)
+{
+    int rval;
+    int sock;
+
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+	perror("socket");
+	return -1;
+    }
+
+    if ((rval = ioctl(sock, SIOCGIFCONF , (char*)ifconf)) < 0)
+	perror("ioctl(SIOGIFCONF)");
+
+    close(sock);
+
+    return rval;
+}
+
+#endif
 
 #ifdef _WIN32
 char **get_ipaddr_list(void)
@@ -64,6 +92,7 @@ char **get_ipaddr_list(void)
     if (ip_list)
 	return ip_list;
 
+#ifndef ANDROID
     if (getifaddrs(&ifaddr) == -1) {
 	perror("getifaddrs");
 	return NULL;
@@ -94,6 +123,34 @@ char **get_ipaddr_list(void)
     }
  exit1:
     freeifaddrs(ifaddr);
+#else
+    struct ifreq ifreqs[20];
+    struct ifconf ifconf;
+    int  nifaces, n;
+
+    memset(&ifconf,0,sizeof(ifconf));
+    ifconf.ifc_buf = (char*) (ifreqs);
+    ifconf.ifc_len = sizeof(ifreqs);
+
+    if (get_iface_list(&ifconf) < 0)
+	return NULL;
+
+    nifaces =  ifconf.ifc_len/sizeof(struct ifreq);
+
+    fprintf(stderr, "Interfaces (count = %d)\n", nifaces);
+    for(n = 0; n < nifaces; n++) {
+	char host[INET_ADDRSTRLEN] ;
+	struct sockaddr_in *b = (struct sockaddr_in *) &(ifreqs[n].ifr_addr);
+	inet_ntop(AF_INET, &b->sin_addr, host, sizeof(host));
+	printf("\t%-10s\t%s\n", ifreqs[n].ifr_name, host);
+	if (!(!strncmp(host, "127.", 4))) {
+	    printf("\taddress: <%s>\n", host);
+	    ip_list = realloc(ip_list, (i + 1) * sizeof(char *));
+	    ip_list[i - 1] = strdup(host);
+	    ip_list[i++] = NULL;
+	}
+    }
+#endif
     return ip_list;
 }
 #endif
