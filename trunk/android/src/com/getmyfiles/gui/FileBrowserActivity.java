@@ -8,6 +8,7 @@ import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -16,7 +17,7 @@ import android.widget.TextView;
 public class FileBrowserActivity extends ListActivity {	
 	private List<String> item = null;
 	private List<String> path = null;
-	private String root="/";
+	private String root="/sdcard";
 	private TextView myPath;
 	
     /** Called when the activity is first created. */
@@ -24,13 +25,13 @@ public class FileBrowserActivity extends ListActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.filebrowser);
-        myPath = (TextView)findViewById(R.id.path);
+        myPath = (TextView)findViewById(R.id.pathText);
         getDir(root);
     }
     
     private void getDir(String dirPath)
     {
-    	myPath.setText("Location: " + dirPath);
+    	myPath.setText(dirPath);
     	
     	item = new ArrayList<String>();
     	path = new ArrayList<String>();
@@ -42,9 +43,9 @@ public class FileBrowserActivity extends ListActivity {
     	
     	if(!dirPath.equals(root))
     	{
-
-    		item.add(root);
-    		path.add(root);
+    		Log.v("PATH", dirPath + " " + root);
+//    		item.add(root);
+//    		path.add(root);
     		
     		item.add("../");
     		path.add(f.getParent());
