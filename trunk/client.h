@@ -13,11 +13,12 @@ typedef struct {
     int		max_ext_conns;
     int		max_int_conns;
     int		exit_request;
+    int		id;
 } client_args;
 
 #ifdef CLIENT_GUI
-void show_server_directory(char *str);
-void update_client(char *vers);
+void show_server_directory(int id, char *str);
+void update_client(int id, char *vers);
 #endif
 
 int client_connect(client_args *client);

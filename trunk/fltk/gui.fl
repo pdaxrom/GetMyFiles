@@ -138,7 +138,7 @@ connectButton->value(0);
 urlText->value("");} {}
 } 
 
-Function {show_server_directory(char *dir)} {open C
+Function {show_server_directory(int id, char *dir)} {open selected C
 } {
   code {urlText->value(dir);} {}
 } 
@@ -146,8 +146,7 @@ Function {show_server_directory(char *dir)} {open C
 Function {show_shared_directory(char *dir)} {open C
 } {
   code {folderText->value(dir);
-folderText->redraw();} {selected
-  }
+folderText->redraw();} {}
 } 
 
 Function {make_conf_window()} {open
