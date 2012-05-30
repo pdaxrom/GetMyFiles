@@ -223,7 +223,7 @@ void set_offline() {
   urlText->value("");
 }
 
-void show_server_directory(char *dir) {
+void show_server_directory(int id, char *dir) {
   urlText->value(dir);
 }
 

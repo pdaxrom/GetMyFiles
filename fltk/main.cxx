@@ -63,6 +63,7 @@ int online_client(const char *path)
     client.port = 8100;
     client.root_dir = path;
     client.exit_request = 0;
+    client.id = 0;
 
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
     if (pthread_create(&tid, NULL, &thread_client, (void *) &client) != 0) {
@@ -83,7 +84,7 @@ int offline_client(void)
     return 0;
 }
 
-void update_client(char *vers)
+void update_client(int id, char *vers)
 {
     snprintf(infoText, sizeof(infoText), "Please update this client to\n version %s or better!", vers);
     show_update_window = 1;
