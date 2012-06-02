@@ -1,0 +1,17 @@
+--- android-ndk-r8/build/core/definitions.mk-	2012-06-02 12:29:06.321943907 +0700
++++ android-ndk-r8/build/core/definitions.mk	2012-06-02 12:30:05.681943892 +0700
+@@ -850,10 +850,10 @@
+     $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain any space)
+     $$(call __ndk_error,Aborting)
+ endif
+-ifneq (,$$(filter %.a %.so,$$(LOCAL_MODULE_FILENAME)))
+-    $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain a file extension)
+-    $$(call __ndk_error,Aborting)
+-endif
++#ifneq (,$$(filter %.a %.so,$$(LOCAL_MODULE_FILENAME)))
++#    $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain a file extension)
++#    $$(call __ndk_error,Aborting)
++#endif
+ ifneq (1,$$(words $$(subst /, ,$$(LOCAL_MODULE_FILENAME))))
+     $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain directory separators)
+     $$(call __ndk_error,Aborting)
