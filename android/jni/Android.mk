@@ -17,8 +17,8 @@ VERSION		:= $(shell ../getversion.sh ../)
 
 include $(CLEAR_VARS)
 
-#LOCAL_MODULE    := getmyfiles
-LOCAL_MODULE    := getmyfiles.so
+LOCAL_MODULE    := getmyfiles
+#LOCAL_MODULE    := libgetmyfiles.so
 LOCAL_SRC_FILES := \
     ../../client.c \
     ../../urldecode.c \

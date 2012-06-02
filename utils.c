@@ -14,6 +14,12 @@ static struct {
 {NULL, NULL}
 };
 
+#ifdef ANDROID
+#undef realpath
+#define realpath _realpath
+#include "realpath.c"
+#endif
+
 #ifdef __APPLE__
 #include <stdlib.h>
 

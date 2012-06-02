@@ -11,11 +11,11 @@ extern "C" {
 #define dprintf(...)
 #endif
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(ANDROID)
 #define _realpath realpath
 #endif
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && defined(ANDROID)
 char *_realpath(const char *path, char *resolved);
 #endif
 
