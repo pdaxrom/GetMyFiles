@@ -1,0 +1,3 @@
+#!/bin/sh
+
+find libs -name getmyfiles | while read f; do mv $f `dirname $f`/libgetmyfiles.so ; done
