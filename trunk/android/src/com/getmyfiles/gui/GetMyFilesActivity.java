@@ -1,24 +1,40 @@
 package com.getmyfiles.gui;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 public class GetMyFilesActivity extends Activity {
+	private static final String TAG = "getMyFiles";
 	private static final int ACTIVITY_CREATE = 1;
 	private Button pathButton;
 	private TextView pathView;
+	private ToggleButton connectButton;
+	private TextView urlView;
+	private Thread clientThread;
+	private String execDir;
+	private Process process = null;
+	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        execDir = this.getCacheDir().getParentFile().getAbsolutePath() + "/lib";
         pathView = (TextView) findViewById(R.id.pathText);
+        urlView = (TextView) findViewById(R.id.urlText);
         pathButton = (Button) findViewById(R.id.pathButton);
         pathButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -27,6 +43,30 @@ public class GetMyFilesActivity extends Activity {
             	startActivityForResult(myIntent, ACTIVITY_CREATE);
 
             }
+        });
+        connectButton = (ToggleButton) findViewById(R.id.connectButton);
+        connectButton.setOnClickListener(new OnClickListener() {
+        	public void onClick(View v) {
+        		if (clientThread != null && clientThread.isAlive()) {
+        			clientThread.interrupt();
+        		} else {
+        			clientThread = new MyThread();
+        			clientThread.start();
+/* 
+        			try {
+        				process = Runtime.getRuntime().exec(execDir + "/libgetmyfiles.so");
+        			} catch (IOException e1) {
+        				Log.e(TAG, "Error creating process: " + e1);
+        				return;
+        			}
+        			new Thread() {
+        				public void run() {
+        					
+        				}
+        			}.start();
+ */
+        		}
+        	}
         });
     }
 
@@ -39,5 +79,58 @@ public class GetMyFilesActivity extends Activity {
     		  pathView.setText(path);
     	  }
       }
+    }
+    
+    private Handler handler = new Handler();
+    
+    private void output(final String str) {
+    	Runnable proc = new Runnable() {
+    		public void run() {
+    			urlView.setText(str);    		}
+    	};
+    	handler.post(proc);
+    }
+    
+    public class MyThread extends Thread {
+    	public void run() {
+    		pathButton.setClickable(false);
+			String exe = execDir + "/libgetmyfiles.so " + pathView.getText().toString();
+			Log.i("run app", exe);
+			try {
+				Process process = Runtime.getRuntime().exec(exe);
+				try {    		    
+					BufferedReader procerr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+					while (true) {
+						if (procerr.ready()) {
+							try {
+								String errstr = procerr.readLine();
+								Log.i(TAG, errstr);
+								if (errstr.startsWith("Server directory: ")) {
+									String url = errstr.substring(18);
+									Log.i(TAG, url);
+									output(url);
+								}
+							} catch (IOException ie) {
+								Log.e(TAG, "procerr exception: " + ie);
+								break;
+							}
+						} else {
+							Thread.sleep(1000);
+						}
+					}
+					procerr.close();    			
+					process.waitFor();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				} catch (InterruptedException e) {
+					//throw new RuntimeException(e);
+					Log.i(TAG, "interrupt " + e);
+					process.destroy();
+				}
+			} catch (IOException ie) {
+				Log.e(TAG, "exec() " + ie);
+			}
+		    pathButton.setClickable(true);
+    	}
     }
 }
