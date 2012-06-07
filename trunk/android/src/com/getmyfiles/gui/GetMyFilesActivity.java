@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
@@ -26,7 +25,6 @@ public class GetMyFilesActivity extends Activity {
 	private TextView urlView;
 	private Thread clientThread;
 	private String execDir;
-	private Process process = null;
 	
     /** Called when the activity is first created. */
     @Override
@@ -38,7 +36,12 @@ public class GetMyFilesActivity extends Activity {
         urlView = (TextView) findViewById(R.id.urlText);
         pathButton = (Button) findViewById(R.id.pathButton);
         connectButton = (ToggleButton) findViewById(R.id.connectButton);
-        share_mode(false);
+        clientThread = (Thread) getLastNonConfigurationInstance();
+        if (clientThread != null && clientThread.isAlive()) {
+        	share_mode(true);
+        } else {
+        	share_mode(false);
+        }
         pathButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
             	Intent myIntent = new Intent(GetMyFilesActivity.this, FileBrowserActivity.class);
@@ -58,6 +61,20 @@ public class GetMyFilesActivity extends Activity {
         	}
         });
     }
+
+	@Override
+	public Object onRetainNonConfigurationInstance() {
+		return clientThread;
+	}
+
+	@Override
+	protected void onDestroy() {
+		Log.i(TAG, "Finish native client before application exit");
+		if (clientThread != null && clientThread.isAlive()) {
+			clientThread.interrupt();
+		}
+		super.onDestroy();
+	}
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
