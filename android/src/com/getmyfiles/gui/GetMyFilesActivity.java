@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -76,6 +77,7 @@ public class GetMyFilesActivity extends Activity {
     		public void run() {
     			urlView.setEnabled(true);
     			urlView.setText(str);
+    			urlView.setMovementMethod(LinkMovementMethod.getInstance());
     		}
     	};
     	handler.post(proc);
@@ -87,6 +89,7 @@ public class GetMyFilesActivity extends Activity {
         		pathButton.setClickable(!m);
         		pathView.setEnabled(!m);
         		urlView.setEnabled(false);
+        		urlView.setText("");
     		}
     	};
     	handler.post(proc);
