@@ -90,6 +90,9 @@ public class GetMyFilesActivity extends Activity {
         		pathView.setEnabled(!m);
         		urlView.setEnabled(false);
         		urlView.setText("");
+        		if (!m) {
+        			connectButton.setChecked(false);
+        		}
     		}
     	};
     	handler.post(proc);
@@ -120,9 +123,16 @@ public class GetMyFilesActivity extends Activity {
 							}
 						} else {
 							Thread.sleep(1000);
+							try {
+								int i = process.exitValue();
+								Log.e(TAG, "process exit code " + i);
+								break;
+							} catch (IllegalThreadStateException ie) {
+								continue;
+							}
 						}
 					}
-					procerr.close();    			
+					procerr.close();
 					process.waitFor();
 				} catch (IOException e) {
 					throw new RuntimeException(e);
