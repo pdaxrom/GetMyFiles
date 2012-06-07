@@ -36,6 +36,8 @@ public class GetMyFilesActivity extends Activity {
         pathView = (TextView) findViewById(R.id.pathText);
         urlView = (TextView) findViewById(R.id.urlText);
         pathButton = (Button) findViewById(R.id.pathButton);
+        connectButton = (ToggleButton) findViewById(R.id.connectButton);
+        share_mode(false);
         pathButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
             	Intent myIntent = new Intent(GetMyFilesActivity.this, FileBrowserActivity.class);
@@ -44,7 +46,6 @@ public class GetMyFilesActivity extends Activity {
 
             }
         });
-        connectButton = (ToggleButton) findViewById(R.id.connectButton);
         connectButton.setOnClickListener(new OnClickListener() {
         	public void onClick(View v) {
         		if (clientThread != null && clientThread.isAlive()) {
@@ -52,19 +53,6 @@ public class GetMyFilesActivity extends Activity {
         		} else {
         			clientThread = new MyThread();
         			clientThread.start();
-/* 
-        			try {
-        				process = Runtime.getRuntime().exec(execDir + "/libgetmyfiles.so");
-        			} catch (IOException e1) {
-        				Log.e(TAG, "Error creating process: " + e1);
-        				return;
-        			}
-        			new Thread() {
-        				public void run() {
-        					
-        				}
-        			}.start();
- */
         		}
         	}
         });
@@ -86,14 +74,27 @@ public class GetMyFilesActivity extends Activity {
     private void output(final String str) {
     	Runnable proc = new Runnable() {
     		public void run() {
-    			urlView.setText(str);    		}
+    			urlView.setEnabled(true);
+    			urlView.setText(str);
+    		}
+    	};
+    	handler.post(proc);
+    }
+    
+    private void share_mode(final boolean m) {
+    	Runnable proc = new Runnable() {
+    		public void run() {
+        		pathButton.setClickable(!m);
+        		pathView.setEnabled(!m);
+        		urlView.setEnabled(false);
+    		}
     	};
     	handler.post(proc);
     }
     
     public class MyThread extends Thread {
     	public void run() {
-    		pathButton.setClickable(false);
+    		share_mode(true);
 			String exe = execDir + "/libgetmyfiles.so " + pathView.getText().toString();
 			Log.i("run app", exe);
 			try {
@@ -130,7 +131,7 @@ public class GetMyFilesActivity extends Activity {
 			} catch (IOException ie) {
 				Log.e(TAG, "exec() " + ie);
 			}
-		    pathButton.setClickable(true);
+			share_mode(false);
     	}
     }
 }
