@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.ClipboardManager;
@@ -47,7 +48,10 @@ public class GetMyFilesActivity extends Activity {
         } else {
         	share_mode(false);
         }
-        registerForContextMenu(urlView);
+        Log.i(TAG, "Android version " + Build.VERSION.SDK_INT);
+        if (Build.VERSION.SDK_INT > 10) {
+        	registerForContextMenu(urlView);
+        }
         pathButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
             	Intent myIntent = new Intent(GetMyFilesActivity.this, FileBrowserActivity.class);
