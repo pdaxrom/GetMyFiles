@@ -9,8 +9,11 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.ClipboardManager;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -44,6 +47,7 @@ public class GetMyFilesActivity extends Activity {
         } else {
         	share_mode(false);
         }
+        registerForContextMenu(urlView);
         pathButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
             	Intent myIntent = new Intent(GetMyFilesActivity.this, FileBrowserActivity.class);
@@ -94,7 +98,19 @@ public class GetMyFilesActivity extends Activity {
     	  }
       }
     }
-    
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+            TextView textView = (TextView) view;
+            menu.setHeaderTitle(textView.getText()).add(0, 0, 0, R.string.menu_copy_to_clipboard);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        ((ClipboardManager) getSystemService(CLIPBOARD_SERVICE)).setText(urlView.getText());
+        return true;
+    }
+
     private Handler handler = new Handler();
     
     private void output(final String str) {
