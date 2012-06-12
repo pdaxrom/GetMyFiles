@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="selectfolder">Папка для публикации</string>
+    <string name="shareurl">Ссылка на опубликованную папку</string>
+    <string name="app_name">GetMyFiles</string>
+	<string name="pathButton">...</string>
+	<string name="nodata">Нет данных</string>
+	<string name="seldirtext">Выберите папку для публикации</string>
+	<string name="filebrowser_name">Выберите папку</string>
+	<string name="connecting">Подключение</string>
+	<string name="wait">Пожалуйста, подождите</string>
+</resources>

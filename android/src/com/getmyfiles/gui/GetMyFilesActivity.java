@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,6 +26,7 @@ public class GetMyFilesActivity extends Activity {
 	private TextView urlView;
 	private Thread clientThread;
 	private String execDir;
+	private ProgressDialog pd;
 	
     /** Called when the activity is first created. */
     @Override
@@ -50,11 +52,17 @@ public class GetMyFilesActivity extends Activity {
 
             }
         });
+        pd = new ProgressDialog(this);
+        pd.setTitle(getString(R.string.connecting));
+        pd.setMessage(getString(R.string.wait));
+        pd.setIndeterminate(true);
+        pd.setCancelable(false);
         connectButton.setOnClickListener(new OnClickListener() {
         	public void onClick(View v) {
         		if (clientThread != null && clientThread.isAlive()) {
         			clientThread.interrupt();
         		} else {
+    				pd.show();
         			clientThread = new MyThread();
         			clientThread.start();
         		}
@@ -114,6 +122,16 @@ public class GetMyFilesActivity extends Activity {
     	};
     	handler.post(proc);
     }
+
+    private void hide_progress() {
+    	Runnable proc = new Runnable() {
+    		public void run() {
+    			pd.hide();
+    		}
+    	};
+    	handler.post(proc);
+    }
+    
     
     public class MyThread extends Thread {
     	public void run() {
@@ -133,6 +151,7 @@ public class GetMyFilesActivity extends Activity {
 									String url = errstr.substring(18);
 									Log.i(TAG, url);
 									output(url);
+									hide_progress();
 								}
 							} catch (IOException ie) {
 								Log.e(TAG, "procerr exception: " + ie);
@@ -161,6 +180,7 @@ public class GetMyFilesActivity extends Activity {
 			} catch (IOException ie) {
 				Log.e(TAG, "exec() " + ie);
 			}
+			hide_progress();
 			share_mode(false);
     	}
     }
