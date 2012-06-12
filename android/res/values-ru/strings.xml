@@ -10,4 +10,5 @@
 	<string name="filebrowser_name">Выберите папку</string>
 	<string name="connecting">Подключение</string>
 	<string name="wait">Пожалуйста, подождите</string>
+	<string name="menu_copy_to_clipboard">Копировать</string>
 </resources>
