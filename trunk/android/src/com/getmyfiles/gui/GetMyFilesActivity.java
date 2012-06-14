@@ -18,19 +18,22 @@ import android.text.ClipboardManager;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
 public class GetMyFilesActivity extends Activity {
 	private final Context context = this;
+	private static final String website_url = "http://getmyfil.es";
 	private static final String update_url = "http://getmyfil.es/?p=download";
 	private static final String TAG = "getMyFiles";
 	private static final int ACTIVITY_CREATE = 1;
-	private Button pathButton;
+	private ImageButton pathButton;
 	private TextView pathView;
 	private ToggleButton connectButton;
 	private TextView urlView;
@@ -46,7 +49,7 @@ public class GetMyFilesActivity extends Activity {
         execDir = this.getCacheDir().getParentFile().getAbsolutePath() + "/lib";
         pathView = (TextView) findViewById(R.id.pathText);
         urlView = (TextView) findViewById(R.id.urlText);
-        pathButton = (Button) findViewById(R.id.pathButton);
+        pathButton = (ImageButton) findViewById(R.id.pathButton);
         connectButton = (ToggleButton) findViewById(R.id.connectButton);
         clientThread = (Thread) getLastNonConfigurationInstance();
         if (clientThread != null && clientThread.isAlive()) {
@@ -121,6 +124,25 @@ public class GetMyFilesActivity extends Activity {
         return true;
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.about:
+ 			   Intent i = new Intent(Intent.ACTION_VIEW);
+			   i.setData(Uri.parse(website_url));
+			   startActivity(i);
+			   break;
+        }
+        return true;
+    }
+    
     private Handler handler = new Handler();
     
     private void output(final String str) {
@@ -171,7 +193,7 @@ public class GetMyFilesActivity extends Activity {
     	    			   startActivity(i);
     	    		   }
     	    		});
-    	  //  	alertDialog.setIcon(R.drawable.icon);
+    	    	alertDialog.setIcon(android.R.drawable.ic_dialog_alert);
     	    	alertDialog.show();    			
     		}
     	};
