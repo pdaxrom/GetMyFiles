@@ -15,7 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -24,14 +24,14 @@ public class FileBrowserActivity extends ListActivity {
 	private List<String> path = null;
 	private String root="/sdcard";
 	private TextView myPath;
-	private Button okButton;
+	private ImageButton okButton;
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.filebrowser);
-        okButton = (Button) findViewById(R.id.okButton);
+        okButton = (ImageButton) findViewById(R.id.okButton);
         okButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
             	String path = myPath.getText().toString();
