@@ -11,4 +11,6 @@
 	<string name="connecting">Подключение</string>
 	<string name="wait">Пожалуйста, подождите</string>
 	<string name="menu_copy_to_clipboard">Копировать</string>
+	<string name="update_message">Пожалуйста, обновите приложение новой версией.</string>
+	<string name="update_button">Обновить</string>
 </resources>

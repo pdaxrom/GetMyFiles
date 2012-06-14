@@ -10,5 +10,7 @@
 	<string name="filebrowser_name">Select a folder</string>
 	<string name="connecting">Connecting</string>
 	<string name="wait">Please wait</string>
-	<string name="menu_copy_to_clipboard">Copy</string>	
+	<string name="menu_copy_to_clipboard">Copy</string>
+	<string name="update_message">Please update this client to new version.</string>
+	<string name="update_button">Update</string>	
 </resources>
