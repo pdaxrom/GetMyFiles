@@ -7,11 +7,12 @@
 	<string name="pathButton">...</string>
 	<string name="nodata">Нет данных</string>
 	<string name="seldirtext">Выберите папку для публикации</string>
-	<string name="filebrowser_name">Выберите папку</string>
+	<string name="filebrowser_name">GetMyFiles - Выберите папку</string>
+	<string name="filebrowser_string">Выбранная папка</string>
 	<string name="connecting">Подключение</string>
 	<string name="wait">Пожалуйста, подождите</string>
 	<string name="menu_copy_to_clipboard">Копировать</string>
-	<string name="update_message">Пожалуйста, обновите приложение новой версией.</string>
+	<string name="update_message">Пожалуйста, обновите приложение на новую версию.</string>
 	<string name="update_button">Обновить</string>
 	<string name="about_button">О программе</string>	
 </resources>
