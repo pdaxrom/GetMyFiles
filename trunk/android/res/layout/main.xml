@@ -82,6 +82,21 @@
 
 
         </TableRow>
+
+        <TableRow
+            android:id="@+id/tableRow5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+                <TextView
+                    android:id="@+id/minihelpView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/minihelp"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        </TableRow>
+
     </TableLayout>
 
 </LinearLayout>
