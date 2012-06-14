@@ -5,8 +5,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +26,8 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 public class GetMyFilesActivity extends Activity {
+	private final Context context = this;
+	private static final String update_url = "http://getmyfil.es/?p=download";
 	private static final String TAG = "getMyFiles";
 	private static final int ACTIVITY_CREATE = 1;
 	private Button pathButton;
@@ -152,6 +158,25 @@ public class GetMyFilesActivity extends Activity {
     	handler.post(proc);
     }
     
+    private void show_update_alert() {
+    	Runnable proc = new Runnable() {
+    		public void run() {
+    	    	AlertDialog alertDialog = new AlertDialog.Builder(context).create();
+    	    	alertDialog.setTitle(R.string.app_name);
+    	    	alertDialog.setMessage(getString(R.string.update_message));
+    	    	alertDialog.setButton(getString(R.string.update_button), new DialogInterface.OnClickListener() {
+    	    		   public void onClick(DialogInterface dialog, int which) {
+    	    			   Intent i = new Intent(Intent.ACTION_VIEW);
+    	    			   i.setData(Uri.parse(update_url));
+    	    			   startActivity(i);
+    	    		   }
+    	    		});
+    	  //  	alertDialog.setIcon(R.drawable.icon);
+    	    	alertDialog.show();    			
+    		}
+    	};
+    	handler.post(proc);
+    }
     
     public class MyThread extends Thread {
     	public void run() {
@@ -172,6 +197,9 @@ public class GetMyFilesActivity extends Activity {
 									Log.i(TAG, url);
 									output(url);
 									hide_progress();
+								} else if (errstr.startsWith("Update client to version")) {
+									show_update_alert();
+									break;
 								}
 							} catch (IOException ie) {
 								Log.e(TAG, "procerr exception: " + ie);
