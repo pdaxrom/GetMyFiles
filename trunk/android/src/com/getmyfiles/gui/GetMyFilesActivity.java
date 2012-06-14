@@ -6,6 +6,9 @@ import java.io.InputStreamReader;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -33,6 +36,7 @@ public class GetMyFilesActivity extends Activity {
 	private static final String update_url = "http://getmyfil.es/?p=download";
 	private static final String TAG = "getMyFiles";
 	private static final int ACTIVITY_CREATE = 1;
+	private static final int NOTIFICATION_ID = 1;
 	private ImageButton pathButton;
 	private TextView pathView;
 	private ToggleButton connectButton;
@@ -200,6 +204,28 @@ public class GetMyFilesActivity extends Activity {
     	handler.post(proc);
     }
     
+    private void show_notification_disconnect() {
+    	Runnable proc = new Runnable() {
+    		public void run() {
+    			CharSequence title = getString(R.string.app_name);
+    	        CharSequence message = getString(R.string.disconnect_message);
+    	 
+    	        NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+    	        Notification notification = new Notification(android.R.drawable.stat_notify_error, getString(R.string.app_name), System.currentTimeMillis());
+    	        notification.flags |= Notification.FLAG_AUTO_CANCEL;
+    	 
+    	        Intent notificationIntent = new Intent(context, GetMyFilesActivity.class); //(Intent.ACTION_MAIN);
+    	        //notificationIntent.setClass(context.getApplicationContext(), GetMyFilesActivity.class);
+    	        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+    	        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
+    	 
+    	        notification.setLatestEventInfo(context, title, message, pendingIntent);
+    	        notificationManager.notify(NOTIFICATION_ID, notification);
+    		}
+    	};
+    	handler.post(proc);
+    }
+    
     public class MyThread extends Thread {
     	public void run() {
     		share_mode(true);
@@ -208,6 +234,7 @@ public class GetMyFilesActivity extends Activity {
 			try {
 				Process process = Runtime.getRuntime().exec(exe);
 				try {    		    
+					boolean show_disconnection = true;
 					BufferedReader procerr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 					while (true) {
 						if (procerr.ready()) {
@@ -221,6 +248,7 @@ public class GetMyFilesActivity extends Activity {
 									hide_progress();
 								} else if (errstr.startsWith("Update client to version")) {
 									show_update_alert();
+									show_disconnection = false;
 									break;
 								}
 							} catch (IOException ie) {
@@ -237,6 +265,9 @@ public class GetMyFilesActivity extends Activity {
 								continue;
 							}
 						}
+					}
+					if (show_disconnection) {
+						show_notification_disconnect();
 					}
 					procerr.close();
 					process.waitFor();

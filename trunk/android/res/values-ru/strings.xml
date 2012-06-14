@@ -16,4 +16,5 @@
 	<string name="update_button">Обновить</string>
 	<string name="about_button">О программе</string>
 	<string name="minihelp">Нажмите кнопку Домой для работы в фоновом режиме или кнопку Назад для выхода.</string>
+	<string name="disconnect_message">Подключение разорвано...</string>
 </resources>
