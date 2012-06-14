@@ -70,8 +70,8 @@ public class GetMyFilesActivity extends Activity {
             }
         });
         pd = new ProgressDialog(this);
-        pd.setTitle(getString(R.string.connecting));
-        pd.setMessage(getString(R.string.wait));
+        pd.setTitle(getString(R.string.connecting) + "...");
+        pd.setMessage(getString(R.string.wait) + "...");
         pd.setIndeterminate(true);
         pd.setCancelable(false);
         connectButton.setOnClickListener(new OnClickListener() {
