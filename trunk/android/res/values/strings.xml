@@ -7,7 +7,8 @@
 	<string name="pathButton">...</string>
 	<string name="nodata">No data</string>
 	<string name="seldirtext">Select folder to share</string>
-	<string name="filebrowser_name">Select a folder</string>
+	<string name="filebrowser_name">GetMyFiles - Select a folder</string>
+	<string name="filebrowser_string">Selected folder</string>
 	<string name="connecting">Connecting</string>
 	<string name="wait">Please wait</string>
 	<string name="menu_copy_to_clipboard">Copy</string>
