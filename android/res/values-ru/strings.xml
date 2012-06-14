@@ -14,5 +14,6 @@
 	<string name="menu_copy_to_clipboard">Копировать</string>
 	<string name="update_message">Пожалуйста, обновите приложение на новую версию.</string>
 	<string name="update_button">Обновить</string>
-	<string name="about_button">О программе</string>	
+	<string name="about_button">О программе</string>
+	<string name="minihelp">Нажмите кнопку Домой для работы в фоновом режиме или кнопку Назад для выхода.</string>
 </resources>
