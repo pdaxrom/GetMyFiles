@@ -31,6 +31,7 @@ public class FileBrowserActivity extends ListActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.filebrowser);
+
         okButton = (ImageButton) findViewById(R.id.okButton);
         okButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {

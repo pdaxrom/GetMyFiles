@@ -33,8 +33,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1.39" >
-
-                    <requestFocus />
                 </EditText>
 
                 <ImageButton
@@ -99,4 +97,17 @@
 
     </TableLayout>
 
+    <RelativeLayout 
+        android:id="@+id/InnerRelativeLayout"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content" >
+    
+	<com.mobclix.android.sdk.MobclixMMABannerXLAdView
+	    android:id="@+id/banner_adview"
+	    android:layout_width="320dip"
+	    android:layout_height="50dip"
+	    android:layout_alignParentBottom="true" />
+
+    </RelativeLayout>
 </LinearLayout>
