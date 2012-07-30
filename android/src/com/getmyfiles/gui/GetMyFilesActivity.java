@@ -41,9 +41,17 @@ public class GetMyFilesActivity extends Activity {
 	private TextView pathView;
 	private ToggleButton connectButton;
 	private TextView urlView;
-	private Thread clientThread;
+	//private Thread clientThread;
 	private String execDir;
 	private ProgressDialog pd;
+
+	private MyShareInfo myShareInfo;
+	
+	private class MyShareInfo {
+		public Thread thread;
+		public String path;
+		public String url;
+	}
 	
     /** Called when the activity is first created. */
     @Override
@@ -56,12 +64,23 @@ public class GetMyFilesActivity extends Activity {
         urlView = (TextView) findViewById(R.id.urlText);
         pathButton = (ImageButton) findViewById(R.id.pathButton);
         connectButton = (ToggleButton) findViewById(R.id.connectButton);
-        clientThread = (Thread) getLastNonConfigurationInstance();
-        if (clientThread != null && clientThread.isAlive()) {
-        	share_mode(true);
-        } else {
-        	share_mode(false);
+
+        myShareInfo  = (MyShareInfo) getLastNonConfigurationInstance();
+        
+        if (myShareInfo == null) {
+        	myShareInfo = new MyShareInfo();
+        	share_mode(false);        	
         }
+
+        if (myShareInfo != null) {
+            if (myShareInfo.thread != null && myShareInfo.thread.isAlive()) {
+            	Log.i(TAG, "thread alive!!! " + myShareInfo.path + " " + myShareInfo.url);
+            	pathView.setText(myShareInfo.path);
+            	share_mode(true);
+            	output(myShareInfo.url);
+            }
+        }
+        	
         Log.i(TAG, "Android version " + Build.VERSION.SDK_INT);
         if (Build.VERSION.SDK_INT > 10) {
         	registerForContextMenu(urlView);
@@ -81,12 +100,13 @@ public class GetMyFilesActivity extends Activity {
         pd.setCancelable(false);
         connectButton.setOnClickListener(new OnClickListener() {
         	public void onClick(View v) {
-        		if (clientThread != null && clientThread.isAlive()) {
-        			clientThread.interrupt();
+        		if (myShareInfo.thread != null && myShareInfo.thread.isAlive()) {
+        			myShareInfo.thread.interrupt();
+        			share_mode(false);
         		} else {
     				pd.show();
-        			clientThread = new MyThread();
-        			clientThread.start();
+    				myShareInfo.thread = new MyThread();
+    				myShareInfo.thread.start();
         		}
         	}
         });
@@ -94,18 +114,31 @@ public class GetMyFilesActivity extends Activity {
 
 	@Override
 	public Object onRetainNonConfigurationInstance() {
-		return clientThread;
+		myShareInfo.path = new String(pathView.getText().toString());
+		myShareInfo.url = new String(urlView.getText().toString());
+		return myShareInfo;
 	}
 
+/*
 	@Override
 	protected void onDestroy() {
 		Log.i(TAG, "Finish native client before application exit");
-		if (clientThread != null && clientThread.isAlive()) {
-			clientThread.interrupt();
+		if (myShareInfo.thread != null && myShareInfo.thread.isAlive()) {
+//			myShareInfo.thread.interrupt();
 		}
 		super.onDestroy();
 	}
+ */
 
+	@Override
+	public void onBackPressed() {
+		Log.i(TAG, "Finish native client before application exit");
+		if (myShareInfo.thread != null && myShareInfo.thread.isAlive()) {
+			myShareInfo.thread.interrupt();
+		}
+		super.onBackPressed();	
+	}
+	
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
       super.onActivityResult(requestCode, resultCode, data);
