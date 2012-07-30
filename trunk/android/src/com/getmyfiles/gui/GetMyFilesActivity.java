@@ -50,6 +50,7 @@ public class GetMyFilesActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
         execDir = this.getCacheDir().getParentFile().getAbsolutePath() + "/lib";
         pathView = (TextView) findViewById(R.id.pathText);
         urlView = (TextView) findViewById(R.id.urlText);
