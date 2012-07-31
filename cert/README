@@ -5,3 +5,6 @@ generate new key:
 check csr:
 
  openssl req -in server.csr -noout -text
+
+java key for android app
+ keytool -genkey -v -keystore sashz-release-key.keystore -alias alias_name -keyalg RSA -keysize 2048 -validity 10000

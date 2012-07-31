@@ -73,11 +73,13 @@ public class FileBrowserActivity extends ListActivity {
     	for(int i=0; i < files.length; i++)
     	{
     			File file = files[i];
-    			path.add(file.getPath());
-    			if(file.isDirectory())
+    			if(file.isDirectory()) {
     				item.add(file.getName() + "/");
-//    			else
+        			path.add(file.getPath());
+//    			} else {
 //    				item.add(file.getName());
+//        			path.add(file.getPath());
+    			}
     	}
     	
     	ArrayAdapter<String> fileList =

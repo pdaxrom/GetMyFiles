@@ -32,7 +32,9 @@
                     android:id="@+id/pathText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
                     android:layout_weight="1.39" >
+
                 </EditText>
 
                 <ImageButton
@@ -65,12 +67,13 @@
 
                 <EditText
                     android:id="@+id/urlText"
-                    android:editable="false"
-                    android:autoLink="web"
-                    android:linksClickable="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.06" />
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1.06"
+                    android:autoLink="web"
+                    android:editable="false"
+                    android:linksClickable="true" />
 
                 <ToggleButton
                     android:id="@+id/connectButton"
