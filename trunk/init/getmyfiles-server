@@ -1,0 +1,56 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          single
+# Required-Start:    $local_fs $all killprocs
+# Required-Stop:
+# Default-Start:     1
+# Default-Stop:
+# Short-Description: executed by init(8) upon entering runlevel 1 (single).
+### END INIT INFO
+
+PATH=/sbin:/bin
+
+GETMYFILES_OPTS="8000 8100"
+
+if test -f /etc/default/ssh; then
+    . /etc/default/ssh
+fi
+
+. /lib/lsb/init-functions
+
+if [ -n "$2" ]; then
+    GETMYFILES_OPTS="$GETMYFILES_OPTS $2"
+fi
+
+case "$1" in
+  start)
+	log_daemon_msg "Starting GetMyFiles server" "getmyfiles-server" || true
+	if start-stop-daemon --start --quiet --background --exec /usr/sbin/getmyfiles-server -- $GETMYFILES_OPTS; then
+	    log_end_msg 0 || true
+	else
+	    log_end_msg 1 || true
+	fi
+	;;
+  stop)
+	log_daemon_msg "Stopping GetMyFiles server" "getmyfiles-server" || true
+	if start-stop-daemon --stop --quiet --exec /usr/sbin/getmyfiles-server -- $GETMYFILES_OPTS; then
+	    log_end_msg 0 || true
+	else
+	    log_end_msg 1 || true
+	fi
+	;;
+
+  restart)
+	log_daemon_msg "Restarting GetMyFiles server" "getmyfiles-server" || true
+	start-stop-daemon --stop --quiet --retry 30 --exec /usr/sbin/getmyfiles-server -- $GETMYFILES_OPTS
+	if start-stop-daemon --start --quiet --background --exec /usr/sbin/getmyfiles-server -- $GETMYFILES_OPTS; then
+	    log_end_msg 0 || true
+	else
+	    log_end_msg 1 || true
+	fi
+	;;
+  *)
+	echo "Usage: $0 start|stop" >&2
+	exit 3
+	;;
+esac
