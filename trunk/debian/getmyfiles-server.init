@@ -1,19 +1,19 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          single
+# Provides:          getmyfiles
 # Required-Start:    $local_fs $all killprocs
 # Required-Stop:
-# Default-Start:     1
-# Default-Stop:
-# Short-Description: executed by init(8) upon entering runlevel 1 (single).
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: GetMyFil.es server.
 ### END INIT INFO
 
 PATH=/sbin:/bin
 
 GETMYFILES_OPTS="8000 8100"
 
-if test -f /etc/default/ssh; then
-    . /etc/default/ssh
+if test -f /etc/default/getmyfiles; then
+    . /etc/default/getmyfiles
 fi
 
 . /lib/lsb/init-functions
