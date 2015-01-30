@@ -10,10 +10,10 @@ TARGET_S = getmyfiles-server
 
 TARGET_C = getmyfiles-client
 
-LIBS = -g -lssl -lcrypto -lpthread
-
 ifeq (y, $(STATIC))
-LIBS += -lz -ldl -static
+LIBS = -g -lssl -lcrypto -lpthread -lz -ldl -static
+else
+LIBS = -g -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic -lpthread -ldl
 endif
 else
 TARGET_S =

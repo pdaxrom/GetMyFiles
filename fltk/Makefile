@@ -2,9 +2,10 @@ VERSION		:= $(shell ../getversion.sh ../)
 SYSTEM		:= $(shell uname)
 
 ifneq (mingw32, $(SYSTEM))
-LIBS		= -g -lssl -lcrypto -lpthread
 ifeq (y, $(STATIC))
-LIBS		+= -lz -ldl -static
+LIBS		+= -g -lssl -lcrypto -lpthread -lz -ldl -static
+else
+LIBS		= -g -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic -lpthread -ldl
 endif
 ifeq (Darwin, $(SYSTEM))
 CC		 = i686-apple-darwin10-gcc
