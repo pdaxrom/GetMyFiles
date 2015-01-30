@@ -25,10 +25,6 @@
 #include "client.h"
 #include "connctrl.h"
 
-#ifdef __MINGW32__
-void *alloca(size_t);
-#endif
-
 #define BUF_SIZE	1024
 #define KEY_SIZE	16
 
