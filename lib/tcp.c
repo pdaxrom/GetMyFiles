@@ -72,7 +72,7 @@ SSL_CTX *ssl_initialize(void)
     SSL_load_error_strings();
 
     /* 1. initialize context */
-    if ((ssl_context = SSL_CTX_new(SSLv3_method())) == NULL) {
+    if ((ssl_context = SSL_CTX_new(TLSv1_2_method())) == NULL) {
 	fprintf(stderr, "Failed to initialize SSL context.\n");
 	return NULL;
     }
@@ -112,7 +112,7 @@ static SSL_CTX *ssl_client_initialize(void)
     SSL_load_error_strings();
     OpenSSL_add_all_algorithms();
     SSL_METHOD *meth;
-    meth = SSLv3_client_method();
+    meth = TLSv1_2_client_method();
     ctx = SSL_CTX_new(meth);
 
     if (!ctx) {
