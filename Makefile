@@ -20,9 +20,9 @@ TARGET_S =
 
 TARGET_C = getmyfiles-client.exe
 
-CC = i686-mingw32-gcc
+CC = i686-w64-mingw32-gcc
 
-LIBS = -g -lssl -lcrypto -lz -lwsock32 -liphlpapi -lgdi32
+LIBS = -g -Lextern/inst/lib -lssl -lcrypto -lwsock32 -liphlpapi -lgdi32
 endif
 
 ifeq (Darwin, $(SYSTEM))
@@ -35,7 +35,7 @@ all: $(TARGET_S) $(TARGET_C)
 
 PREFIX = /opt/simple-nx
 
-CFLAGS = -g -Wall -Ilib -DWWWROOT=\"$(WWWROOT)\" -DCONFIG_DIR=\"$(CONFIG_DIR)\" -DVERSION=$(VERSION)
+CFLAGS = -g -Wall -Iextern/inst/include -Ilib -DWWWROOT=\"$(WWWROOT)\" -DCONFIG_DIR=\"$(CONFIG_DIR)\" -DVERSION=$(VERSION)
 
 ifeq (y,$(DEBUG))
 CFLAGS += -DDEBUG

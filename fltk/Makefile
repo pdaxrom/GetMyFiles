@@ -16,14 +16,14 @@ LIBS		+= -lXpm
 endif
 else
 EXEEXT		= .exe
-CC		= i686-mingw32-gcc
-CXX		= i686-mingw32-g++
-LIBS		= -static -g -lssl -lcrypto -lz -lwsock32 -liphlpapi -lgdi32
-WINDRES		= i686-mingw32-windres
-STRIP		= i686-mingw32-strip
+CC		= i686-w64-mingw32-gcc
+CXX		= i686-w64-mingw32-g++
+LIBS		= -L../extern/inst/lib -static -g -lssl -lcrypto -lwsock32 -liphlpapi -lgdi32
+WINDRES		= i686-w64-mingw32-windres
+STRIP		= i686-w64-mingw32-strip
 endif
 
-CFLAGS = -g -Wall -I. -I.. -I../lib -DCLIENT_GUI -DVERSION=$(VERSION)
+CFLAGS = -g -Wall -I. -I.. -I../extern/inst/include -I../lib -DCLIENT_GUI -DVERSION=$(VERSION)
 ifeq (y,$(DEBUG))
 CFLAGS += -DDEBUG
 endif
