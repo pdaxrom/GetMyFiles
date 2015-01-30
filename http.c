@@ -17,10 +17,6 @@
 #include "utils.h"
 #include "getaddr.h"
 
-#ifdef __MINGW32__
-void *alloca(size_t);
-#endif
-
 #define BUF_SIZE 4096
 
 #define BUF_RESP_SIZE	1024
