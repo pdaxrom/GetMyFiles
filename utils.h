@@ -15,7 +15,7 @@ extern "C" {
 #define _realpath realpath
 #endif
 
-#if defined(__APPLE__) && defined(ANDROID)
+#if defined(__APPLE__) || defined(ANDROID)
 char *_realpath(const char *path, char *resolved);
 #endif
 

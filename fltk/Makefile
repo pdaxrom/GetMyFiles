@@ -5,11 +5,15 @@ ifneq (mingw32, $(SYSTEM))
 ifeq (y, $(STATIC))
 LIBS		+= -g -L../extern/inst/lib -lssl -lcrypto -lpthread -lz -ldl -static
 else
+ifneq (Darwin, $(SYSTEM))
 LIBS		= -g -L../extern/inst/lib -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic -lpthread -ldl
+else
+LIBS		= -g -L../extern/inst/lib -lssl -lcrypto -lpthread -ldl
+endif
 endif
 ifeq (Darwin, $(SYSTEM))
-CC		 = i686-apple-darwin10-gcc
-CXX		 = i686-apple-darwin10-g++
+CC		 = gcc
+CXX		 = g++
 LIBS		+= -lcrypto
 else
 LIBS		+= -lXpm

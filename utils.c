@@ -28,10 +28,11 @@ char *_realpath(const char *path, char *resolved)
     char *ret;
     char *_ret;
 
-    if (!resolved)
+    if (!resolved) {
 	ret = malloc(PATH_MAX);
-    else
+    } else {
 	ret = resolved;
+    }
 
     if (!(_ret = realpath(path, ret))) {
 	if (!resolved)
