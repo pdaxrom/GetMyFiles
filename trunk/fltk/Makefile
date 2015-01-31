@@ -3,9 +3,9 @@ SYSTEM		:= $(shell uname)
 
 ifneq (mingw32, $(SYSTEM))
 ifeq (y, $(STATIC))
-LIBS		+= -g -lssl -lcrypto -lpthread -lz -ldl -static
+LIBS		+= -g -L../extern/inst/lib -lssl -lcrypto -lpthread -lz -ldl -static
 else
-LIBS		= -g -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic -lpthread -ldl
+LIBS		= -g -L../extern/inst/lib -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic -lpthread -ldl
 endif
 ifeq (Darwin, $(SYSTEM))
 CC		 = i686-apple-darwin10-gcc

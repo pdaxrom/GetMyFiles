@@ -1,0 +1,4 @@
+ubuntu:
+
+sudo apt-get install libxpm-dev cdbs
+
