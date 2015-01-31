@@ -28,7 +28,7 @@ ifeq (y,$(DEBUG))
 CFLAGS += -DDEBUG
 endif
 
-FLTKCONFIG	= fltk-config
+FLTKCONFIG	= ../extern/inst/bin/fltk-config
 #CXX		= $(shell $(FLTKCONFIG) --cxx)
 CXXFLAGS	= $(CFLAGS) $(shell $(FLTKCONFIG) --cxxflags)
 LINKFLTK	= $(LIBS) $(shell $(FLTKCONFIG) --ldstaticflags)
