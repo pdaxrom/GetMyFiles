@@ -88,7 +88,7 @@ static const char *tmpl_body_end_dir =
 "</tbody>"
 "</table>"
 "</div>"
-"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"<div class=\"foot\">Powered by <a href=\"https://getmyfil.es\">getmyfil.es</a></div>"
 /* "<script type=\"text/javascript\" src=\"http://webplayer.yahooapis.com/player.js\"></script>" */
 "</body>";
 
@@ -98,7 +98,7 @@ static const char *tmpl_body_error =
 "<div class=\"list\">"
 "<div class=\"err\">The requested URL %s was not found on this server.</div>"
 "</div>"
-"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"<div class=\"foot\">Powered by <a href=\"https://getmyfil.es\">getmyfil.es</a></div>"
 "</body>";
 
 static const char *tmpl_body_error_416 =
@@ -107,7 +107,7 @@ static const char *tmpl_body_error_416 =
 "<div class=\"list\">"
 "<div class=\"err\">The file is already fully retrieved; nothing to do.</div>"
 "</div>"
-"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"<div class=\"foot\">Powered by <a href=\"https://getmyfil.es\">getmyfil.es</a></div>"
 "</body>";
 
 static const char *tmpl_body_error_501 =
@@ -116,7 +116,7 @@ static const char *tmpl_body_error_501 =
 "<div class=\"list\">"
 "<div class=\"err\">The request is not supported.</div>"
 "</div>"
-"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"<div class=\"foot\">Powered by <a href=\"https://getmyfil.es\">getmyfil.es</a></div>"
 "</body>";
 
 static const char *tmpl_body_error_502 =
@@ -125,7 +125,7 @@ static const char *tmpl_body_error_502 =
 "<div class=\"list\">"
 "<div class=\"err\">The server received an invalid response from the requested shared link.</div>"
 "</div>"
-"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"<div class=\"foot\">Powered by <a href=\"https://getmyfil.es\">getmyfil.es</a></div>"
 "</body>";
 
 static const char *tmpl_body_error_503 =
@@ -134,7 +134,7 @@ static const char *tmpl_body_error_503 =
 "<div class=\"list\">"
 "<div class=\"err\">The server is currently unable to handle the request due to a temporary overloading(maximum connections reached).</div>"
 "</div>"
-"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"<div class=\"foot\">Powered by <a href=\"https://getmyfil.es\">getmyfil.es</a></div>"
 "</body>";
 
 static const char *tmpl_body_error_504 =
@@ -143,7 +143,7 @@ static const char *tmpl_body_error_504 =
 "<div class=\"list\">"
 "<div class=\"err\">The server did not receive a timely response from the requested shared link.</div>"
 "</div>"
-"<div class=\"foot\">Powered by <a href=\"http://getmyfil.es\">getmyfil.es</a></div>"
+"<div class=\"foot\">Powered by <a href=\"https://getmyfil.es\">getmyfil.es</a></div>"
 "</body>";
 
 static const char *tmpl_page_end =
