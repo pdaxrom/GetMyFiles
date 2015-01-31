@@ -42,6 +42,11 @@ elif test "$TARGET_OS" = "Windows" && test "$TARGET_ARCH" = "i686"; then
 
     make CC=i686-w64-mingw32-gcc AR="i686-w64-mingw32-ar rcs" RANLIB=i686-w64-mingw32-ranlib
     make install
+elif test "$TARGET_OS" = "Darwin"; then
+    ./Configure --prefix=${INSTDIR} darwin64-x86_64-cc || error "configure openssl"
+
+    make || error "make openssl"
+    make install || error "install openssl"
 else
     error "Unknown target $TARGET_OS $TARGET_ARCH"
 fi
