@@ -13,7 +13,7 @@ TARGET_C = getmyfiles-client
 ifeq (y, $(STATIC))
 LIBS = -g -lssl -lcrypto -lpthread -lz -ldl -static
 else
-LIBS = -g -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic -lpthread -ldl
+LIBS = -g -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic -lpthread -lz -ldl
 endif
 else
 TARGET_S =
