@@ -32,7 +32,7 @@ if test "$TARGET_OS" = "Linux" && test "$TARGET_ARCH" = "x86_64"; then
 
     make || error "make openssl"
     make install || error "install openssl"
-elif test "$TARGET_OS" = "Linux" && test "$TARGET_ARCH" = "i386"; then
+elif test "$TARGET_OS" = "Linux" && test "$TARGET_ARCH" = "i686"; then
     ./Configure --prefix=${INSTDIR} linux-elf    || error "configure openssl"
 
     make || error "make openssl"
