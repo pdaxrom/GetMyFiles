@@ -1,3 +1,9 @@
+getmyfiles-server (0.95) unstable; urgency=low
+
+  * Replaced ssl method with TLSv1.2.
+
+ -- Support Team <support@getmyfil.es>  Sat, 31 Jan 2015 09:29:11 +0700
+
 getmyfiles-server (0.94) unstable; urgency=low
 
   * Debian build rules.
