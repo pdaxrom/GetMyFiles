@@ -14,11 +14,11 @@
  * limitations under the License.
  *
  */
-#include <jni.h>
 #include <android/log.h>
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include "technology_madisa_getmyfiles_External.h"
 #include "client.h"
 
 #define  LOG_TAG    "getmyfiles"
@@ -26,104 +26,57 @@
 #define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
-#define MAX_CLIENTS	10
-
-static client_args *clients[MAX_CLIENTS];
-
-static pthread_mutex_t mutex_c;
+static client_args client;
 
 static void *thread_client(void *arg)
 {
-    client_args *c = (client_args *) arg;
-    client_connect(c);
-
-    pthread_mutex_lock(&mutex_c);
-    if (clients[c->id])
-	clients[c->id] = NULL;
-    free((void *)c->root_dir);
-    free(c);
-    pthread_mutex_unlock(&mutex_c);
+//    set_online();
+    client_connect((client_args *) arg);
+//    set_offline();
 
     return NULL;
 }
 
 
-void
-Java_com_getmyfiles_client_MainActivity_init(
-    JNIEnv*  env,
-    jobject  this
-				    )
+JNIEXPORT jint JNICALL Java_technology_madisa_getmyfiles_External_connectClient
+  (JNIEnv *env, jobject this, jobjectArray stringArray)
 {
-    memset(clients, 0, sizeof(clients));
-    pthread_mutex_init(&mutex_c, NULL);
-}
+    pthread_t tid;
 
-void
-Java_com_getmyfiles_client_MainActivity_fini(
-    JNIEnv*  env,
-    jobject  this
-				    )
-{
-    pthread_mutex_destroy(&mutex_c);
-}
+    int stringCount = (*env)->GetArrayLength(env, stringArray);
 
+    int i = 0;
+    jstring string = (jstring) (*env)->GetObjectArrayElement(env, stringArray, i);
+    const char *path = (*env)->GetStringUTFChars(env, string, NULL);
 
-jint
-Java_com_getmyfiles_client_MainActivity_connect(
-    JNIEnv*  env,
-    jobject  this,
-    jstring  root_dir,
-    jint     enable_httpd,
-    jint     max_ext_conn,
-    jint     max_int_conn
-					)
-{
-    int i;
-    for (i = 0; i < MAX_CLIENTS; i++) {
-	if (!clients[i]) {
-	    pthread_t tid;
-	    const char *dir = (*env)->GetStringUTFChars(env, root_dir, 0);
-	    clients[i] = malloc(sizeof(client_args));
-	    clients[i]->max_ext_conns = max_ext_conn;
-	    clients[i]->max_int_conns = max_int_conn;
-	    clients[i]->enable_httpd = enable_httpd;
-	    clients[i]->exit_request = 0;
-	    clients[i]->host = "getmyfil.es";
-	    clients[i]->port = 8100;
-	    clients[i]->root_dir = strdup(dir);
-	    clients[i]->id = i;
-	    (*env)->ReleaseStringUTFChars(env, root_dir, dir);
+    client.enable_httpd = 1;
+    client.max_ext_conns = 10;
+    client.max_int_conns = 10;
+    client.host = "getmyfil.es";
+    client.port = 8100;
+    client.root_dir = strdup(path);
+    client.exit_request = 0;
+    client.id = 0;
 
-	    if (pthread_create(&tid, NULL, &thread_client, (void *) &clients[i]) != 0) {
-//		fprintf(stderr, "Can't create client's thread\n");
-		LOGE("Can't create client's thread");
-		free((void *)clients[i]->root_dir);
-		free(clients[i]);
-		clients[i] = NULL;
-		return -1;
-	    }
-
-	    return i;
-	}
+    if (pthread_create(&tid, NULL, &thread_client, (void *) &client) != 0) {
+	fprintf(stderr, "Can't create client's thread\n");
+	return 1;
     }
-    return -1;
+
+    (*env)->ReleaseStringUTFChars(env, string, path);
+
+    return 0;
 }
 
-void
-Java_com_getmyfiles_client_MainActivity_disconnect(
-    JNIEnv*  env,
-    jobject  this,
-    jint     id
-					)
+void show_server_directory(int id, char *str)
 {
-    pthread_mutex_lock(&mutex_c);
-    if (clients[id]) {
-	clients[id]->exit_request = 1;
-	clients[id] = NULL;
-    }
-    pthread_mutex_unlock(&mutex_c);
 }
 
+void update_client(int id, char *vers)
+{
+}
+
+#if 0
 void show_server_directory(int id, char *str)
 {
     jstring jstr = (*env)->NewStringUTF(env, str);
@@ -141,3 +94,4 @@ void update_client(int id, char *vers)
     (*env)->CallObjectMethod(env, obj, messageMe, id, jstr);
     //
 }
+#endif
