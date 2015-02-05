@@ -113,12 +113,12 @@ int client_connect(client_args *client)
 		fprintf(stderr, "Server directory: https://%s:%d%s\n", client->host, client->port - 100, dir_prefix);
 #ifdef CLIENT_GUI
 		snprintf(buf, sizeof(buf), "https://%s:%d%s", client->host, client->port - 100, dir_prefix);
-		show_server_directory(client->id, buf);
+		show_server_directory(client, buf);
 #endif
 	    } else if (!strncmp(buf, "UPD: ", 5)) {
 		fprintf(stderr, "Update client to version %s or better.\n", buf + 5);
 #ifdef CLIENT_GUI
-		update_client(client->id, buf + 5);
+		update_client(client, buf + 5);
 #endif
 		goto exit1;
 	    } else {
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
     client.max_int_conns = 2;
     client.exit_request = 0;
     client.enable_httpd = 1;
-    client.id = 0;
+    client.priv = NULL;
 
 #if 0
     if (argc < 3) {

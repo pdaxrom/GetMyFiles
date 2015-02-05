@@ -23,7 +23,7 @@ extern Fl_Button *confButton;
 extern "C" { Fl_Double_Window* make_window(); }
 extern "C" { void set_online(); }
 extern "C" { void set_offline(); }
-extern "C" { void show_server_directory(int id, char *dir); }
+extern "C" { void show_server_directory(void *client, char *dir); }
 extern "C" { void show_shared_directory(char *dir); }
 #include <FL/Fl_Spinner.H>
 extern Fl_Spinner *maxClients;
