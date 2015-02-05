@@ -84,7 +84,7 @@ int offline_client(void)
     return 0;
 }
 
-void update_client(int id, char *vers)
+void update_client(client_args *client, char *vers)
 {
     snprintf(infoText, sizeof(infoText), "Please update this client to\n version %s or better!", vers);
     show_update_window = 1;

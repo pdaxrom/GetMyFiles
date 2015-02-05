@@ -138,7 +138,7 @@ connectButton->value(0);
 urlText->value("");} {}
 } 
 
-Function {show_server_directory(int id, char *dir)} {open selected C
+Function {show_server_directory(void *client, char *dir)} {open selected C
 } {
   code {urlText->value(dir);} {}
 } 
