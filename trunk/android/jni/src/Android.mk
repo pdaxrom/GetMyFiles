@@ -31,9 +31,9 @@ LOCAL_SRC_FILES := \
     ../../../lib/aes.c \
     main.c
 
-LOCAL_CFLAGS	:= -DVERSION=$(shell ../../getversion.sh ../../) -DCLIENT_GUI
+LOCAL_CFLAGS	:= -DVERSION=$(shell ../../getversion.sh ../../) -DCLIENT_GUI -Wall
 LOCAL_C_INCLUDES := openssl/include ../../ ../../lib
-#LOCAL_LDLIBS    := -llog
+LOCAL_LDLIBS    := -llog
 LOCAL_STATIC_LIBRARIES := libssl-static libcrypto-static
 
 #include $(BUILD_EXECUTABLE)
