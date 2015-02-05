@@ -157,7 +157,7 @@ char **get_ipaddr_list(void)
 
 void free_ipaddr_list(void)
 {
-    int i;
+    int i = 0;
     while (ip_list[i]) {
 	free(ip_list[i++]);
     }
