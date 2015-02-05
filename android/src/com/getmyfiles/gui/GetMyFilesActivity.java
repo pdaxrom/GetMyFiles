@@ -1,9 +1,5 @@
 package com.getmyfiles.gui;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Notification;
@@ -41,7 +37,6 @@ public class GetMyFilesActivity extends Activity {
 	private TextView pathView;
 	private ToggleButton connectButton;
 	private TextView urlView;
-	//private Thread clientThread;
 	private String execDir;
 	private ProgressDialog pd;
 
@@ -52,6 +47,12 @@ public class GetMyFilesActivity extends Activity {
 		public String path;
 		public String url;
 	}
+    static {
+        System.loadLibrary("getmyfiles");
+    }
+
+    public native int connectClient(String[] folders);
+    public native void disconnectClient();
 	
     /** Called when the activity is first created. */
     @Override
@@ -98,10 +99,12 @@ public class GetMyFilesActivity extends Activity {
         pd.setMessage(getString(R.string.wait) + "...");
         pd.setIndeterminate(true);
         pd.setCancelable(false);
+        
         connectButton.setOnClickListener(new OnClickListener() {
         	public void onClick(View v) {
         		if (myShareInfo.thread != null && myShareInfo.thread.isAlive()) {
-        			myShareInfo.thread.interrupt();
+        			//myShareInfo.thread.interrupt();
+        			disconnectClient();
         			share_mode(false);
         		} else {
     				pd.show();
@@ -183,6 +186,19 @@ public class GetMyFilesActivity extends Activity {
     
     private Handler handler = new Handler();
     
+    public void showServerDirectory(String url) {
+    	Log.i(TAG, "-------------------------- XYU!!!!! " + url);
+//		urlView.setEnabled(true);
+//		urlView.setText(url);
+//		urlView.setMovementMethod(LinkMovementMethod.getInstance());
+    	hide_progress();
+    	output(url);
+    }
+    
+    public void updateClient(String version) {
+    	Log.i(TAG, "update client to version " + version);
+    }
+    
     private void output(final String str) {
     	Runnable proc = new Runnable() {
     		public void run() {
@@ -263,59 +279,8 @@ public class GetMyFilesActivity extends Activity {
     public class MyThread extends Thread {
     	public void run() {
     		share_mode(true);
-			String exe = execDir + "/libgetmyfiles.so " + pathView.getText().toString();
-			Log.i("run app", exe);
-			try {
-				Process process = Runtime.getRuntime().exec(exe);
-				try {    		    
-					boolean show_disconnection = true;
-					BufferedReader procerr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-					while (true) {
-						if (procerr.ready()) {
-							try {
-								String errstr = procerr.readLine();
-								Log.i(TAG, errstr);
-								if (errstr.startsWith("Server directory: ")) {
-									String url = errstr.substring(18);
-									Log.i(TAG, url);
-									output(url);
-									hide_progress();
-								} else if (errstr.startsWith("Update client to version")) {
-									show_update_alert();
-									show_disconnection = false;
-									break;
-								}
-							} catch (IOException ie) {
-								Log.e(TAG, "procerr exception: " + ie);
-								break;
-							}
-						} else {
-							Thread.sleep(1000);
-							try {
-								int i = process.exitValue();
-								Log.e(TAG, "process exit code " + i);
-								break;
-							} catch (IllegalThreadStateException ie) {
-								continue;
-							}
-						}
-					}
-					if (show_disconnection) {
-						show_notification_disconnect();
-					}
-					procerr.close();
-					process.waitFor();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				} catch (InterruptedException e) {
-					//throw new RuntimeException(e);
-					Log.i(TAG, "interrupt " + e);
-					process.destroy();
-				}
-			} catch (IOException ie) {
-				Log.e(TAG, "exec() " + ie);
-			}
-			hide_progress();
+    		String[] dirs = { pathView.getText().toString() };
+    		connectClient(dirs);    		
 			share_mode(false);
     	}
     }
