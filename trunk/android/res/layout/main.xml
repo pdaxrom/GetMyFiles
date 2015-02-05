@@ -107,11 +107,6 @@
         android:layout_gravity="center"
         android:layout_height="wrap_content" >
     
-	<com.mobclix.android.sdk.MobclixMMABannerXLAdView
-	    android:id="@+id/banner_adview"
-	    android:layout_width="320dip"
-	    android:layout_height="50dip"
-	    android:layout_alignParentBottom="true" />
 
     </RelativeLayout>
 </LinearLayout>
