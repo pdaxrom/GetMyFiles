@@ -37,6 +37,11 @@ elif test "$TARGET_OS" = "Linux" && test "$TARGET_ARCH" = "i686"; then
 
     make || error "make openssl"
     make install || error "install openssl"
+elif test "$TARGET_OS" = "Linux" && test "$TARGET_ARCH" = "mips"; then
+    ./Configure --prefix=${INSTDIR} linux-mips32    || error "configure openssl"
+
+    make || error "make openssl"
+    make install || error "install openssl"
 elif test "$TARGET_OS" = "Windows" && test "$TARGET_ARCH" = "i686"; then
     ./Configure --prefix=${INSTDIR} mingw
 
