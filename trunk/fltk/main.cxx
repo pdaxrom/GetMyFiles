@@ -15,7 +15,6 @@
 #include "resource.h"
 #endif
 #include <FL/fl_ask.H>
-#include "client.h"
 
 static char infoText[128];
 static int show_update_window;
@@ -63,7 +62,7 @@ int online_client(const char *path)
     client.port = 8100;
     client.root_dir = path;
     client.exit_request = 0;
-    client.id = 0;
+    client.priv = NULL;
 
 #if !defined(_WIN32) || defined(ENABLE_PTHREADS)
     if (pthread_create(&tid, NULL, &thread_client, (void *) &client) != 0) {
