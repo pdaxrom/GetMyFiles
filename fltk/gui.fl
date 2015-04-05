@@ -14,6 +14,9 @@ decl {\#include <FL/filename.H>} {private local
 decl {\#include "../utils.h"} {private local
 } 
 
+decl {\#include "../client.h"} {public global
+} 
+
 decl {int fConnected = 0;} {private local
 } 
 
@@ -138,7 +141,7 @@ connectButton->value(0);
 urlText->value("");} {}
 } 
 
-Function {show_server_directory(void *client, char *dir)} {open selected C
+Function {show_server_directory(client_args *client, char *dir)} {open selected C
 } {
   code {urlText->value(dir);} {}
 } 
