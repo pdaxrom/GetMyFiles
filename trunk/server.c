@@ -307,17 +307,24 @@ static void thread_http_request(void *arg)
 		    char path[PATH_MAX];
 		    pthread_mutex_unlock(&mutex_users);
 		    char *ptr = strchr(buf + 4, ' ');
-		    if (ptr)
+		    if (ptr) {
 			*ptr = 0;
+		    }
 		    remove_slashes(buf + 4);
 		    snprintf(path, sizeof(path), "%s/%s", dir_root, buf + 4);
 		    dprintf("%s path [%s]\n", __FUNCTION__, path);
 		    char *normal_path = _realpath(path, NULL);
 		    dprintf("%s normal_path [%s]\n", __FUNCTION__, normal_path);
-		    if (!normal_path)
+		    if (!normal_path) {
 			send_404(c->channel, buf + 4);
-		    else if (!strncmp(normal_path, dir_root, strlen(dir_root))) {
+		    } else if (!strncmp(normal_path, dir_root, strlen(dir_root))) {
 			struct stat sb;
+			if ((stat(normal_path, &sb) != -1) &&
+			    ((sb.st_mode & S_IFMT) == S_IFDIR)) {
+			    snprintf(path, PATH_MAX - 1, "%s/index.html", normal_path);
+			    free(normal_path);
+			    normal_path = strdup(path);
+			}
 			if ((stat(normal_path, &sb) != -1) &&
 			    ((sb.st_mode & S_IFMT) != S_IFDIR)) {
 			    FILE *f = fopen(normal_path, "rb");
@@ -333,22 +340,28 @@ static void thread_http_request(void *arg)
 					    break;
 				    }
 				    fclose(f);
-				} else
+				} else {
 				    fprintf(stderr, "tcp_write(resp)\n");
+				}
 				free(resp);
-			    } else
+			    } else {
 				send_404(c->channel, buf + 4);
-			} else
+			    }
+			} else {
 			    send_404(c->channel, buf + 4);
-		    } else
+			}
+		    } else {
 			send_404(c->channel, buf + 4);
+		    }
 		    free(normal_path);
 		}
 	    }
-	} else
+	} else {
 	    send_error(c->channel, 501);
-    } else
+	}
+    } else {
 	fprintf(stderr, "%s tcp_read() %d\n", __FUNCTION__, r);
+    }
 
     tcp_close(c->channel);
     free(c);

@@ -72,7 +72,8 @@ install-server: $(TARGET_S)
 	install -D -m 755 $(TARGET_S) $(DESTDIR)/usr/sbin/$(TARGET_S)
 #	install -D -m 755 init/getmyfiles-server $(DESTDIR)/etc/init.d/getmyfiles-server
 	install -d $(DESTDIR)$(CONFIG_DIR)
-	install -D -m 644 htdocs/js/p2p.js $(DESTDIR)$(WWWROOT)/js/p2p.js
+	install -D -m 644 htdocs/index.html $(DESTDIR)$(WWWROOT)/index.html
+	install -D -m 644 htdocs/js/p2p.js  $(DESTDIR)$(WWWROOT)/js/p2p.js
 #	install -D -m 644 htdocs/js/player5.js $(DESTDIR)$(WWWROOT)/js/player5.js
 #	install -D -m 644 htdocs/js/imageviewer.js $(DESTDIR)$(WWWROOT)/js/imageviewer.js
 #	install -D -m 644 htdocs/js/Jplayer.swf $(DESTDIR)$(WWWROOT)/js/Jplayer.swf
