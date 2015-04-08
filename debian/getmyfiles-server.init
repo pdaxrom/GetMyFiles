@@ -10,7 +10,7 @@
 
 PATH=/sbin:/bin
 
-GETMYFILES_OPTS="8000 8100"
+GETMYFILES_OPTS="443 8100"
 
 if test -f /etc/default/getmyfiles; then
     . /etc/default/getmyfiles

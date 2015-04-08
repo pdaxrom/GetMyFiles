@@ -32,6 +32,10 @@ ifeq (y,$(DEBUG))
 CFLAGS += -DDEBUG
 endif
 
+ifeq (y,$(PUBLIC_SERVICE))
+CFLAGS += -DPUBLIC_SERVICE
+endif
+
 FLTKCONFIG	= ../extern/inst/bin/fltk-config
 #CXX		= $(shell $(FLTKCONFIG) --cxx)
 CXXFLAGS	= $(CFLAGS) $(shell $(FLTKCONFIG) --cxxflags)
