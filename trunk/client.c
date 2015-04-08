@@ -110,10 +110,15 @@ int client_connect(client_args *client)
 		for (; (buf[i + 5] >= ' ') && (i < BUF_SIZE - 1); i++)
 		    dir_prefix[i] = buf[i + 5];
 		dir_prefix[i] = 0;
-		fprintf(stderr, "Server directory: https://%s:%d%s\n", client->host, client->port - 100, dir_prefix);
-#ifdef CLIENT_GUI
+#ifdef PUBLIC_SERVICE
+		snprintf(buf, sizeof(buf), "https://%s%s", client->host, dir_prefix);
+#else
 		snprintf(buf, sizeof(buf), "https://%s:%d%s", client->host, client->port - 100, dir_prefix);
+#endif
+#ifdef CLIENT_GUI
 		show_server_directory(client, buf);
+#else
+		fprintf(stderr, "Server directory: %s\n", buf);
 #endif
 	    } else if (!strncmp(buf, "UPD: ", 5)) {
 		fprintf(stderr, "Update client to version %s or better.\n", buf + 5);

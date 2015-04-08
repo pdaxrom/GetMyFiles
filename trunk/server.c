@@ -18,6 +18,8 @@
 #include "utils.h"
 #include "http.h"
 
+#include "openssl/rand.h"
+
 #define HTTP_TIMEOUT	3
 
 #define BUF_SIZE	1024
@@ -221,8 +223,26 @@ static void thread_user(void *arg)
 		    snprintf(buf, sizeof(buf), "UPD: %.2f", serv_vers);
 		    tcp_write(client, buf, strlen(buf));
 		} else {
-		    char *name = tempnam("/","share");
-		    strcpy(name, name + 1);
+		    unsigned char rand_buf[16];
+		    char *name = malloc(16 * 2 + 2); // '/' + rand + NULL
+		    name[0] = '/';
+		    name[33] = 0;
+
+		    if (!RAND_bytes(rand_buf, sizeof(rand_buf))) {
+			dprintf("RAND_bytes()\n");
+			free(name);
+			tcp_close(client);
+			return;
+		    }
+
+		    int i;
+		    for (i = 0; i < 16; i++) {
+			char h = rand_buf[i] >> 4;
+			char l = rand_buf[i] & 0x0f;
+			name[1 + i * 2 + 0] = (h > 9)?h - 10 + 'a':h + '0';
+			name[1 + i * 2 + 1] = (l > 9)?l - 10 + 'a':l + '0';
+		    }
+
 		    dprintf("New client: [%s]\n", name);
 		    sprintf(buf, "URL: %s", name);
 		    if (tcp_write(client, buf, strlen(buf)) == strlen(buf)) {
@@ -232,6 +252,7 @@ static void thread_user(void *arg)
 			pthread_mutex_unlock(&mutex_users);
 			continue;
 		    } else {
+			free(name);
 			fprintf(stderr, "%s tcp_write()\n", __FUNCTION__);
 		    }
 		}

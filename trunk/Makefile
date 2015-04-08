@@ -41,6 +41,10 @@ ifeq (y,$(DEBUG))
 CFLAGS += -DDEBUG
 endif
 
+ifeq (y,$(PUBLIC_SERVICE))
+CFLAGS += -DPUBLIC_SERVICE
+endif
+
 OBJS_L = lib/tcp.o lib/udp.o lib/aes.o
 
 OBJS_S = server.o utils.o http.o urldecode.o getaddr.o
