@@ -111,7 +111,7 @@ static SSL_CTX *ssl_client_initialize(void)
     SSL_library_init();
     SSL_load_error_strings();
     OpenSSL_add_all_algorithms();
-    SSL_METHOD *meth;
+    const SSL_METHOD *meth;
     meth = TLSv1_2_client_method();
     ctx = SSL_CTX_new(meth);
 
@@ -135,7 +135,7 @@ tcp_channel *tcp_open(int mode, const char *addr, int port)
 #endif
 
     tcp_channel *u = (tcp_channel *)malloc(sizeof(tcp_channel));
-    memset(u, 0, sizeof(u));
+    memset(u, 0, sizeof(tcp_channel));
 
     u->mode = mode;
 
