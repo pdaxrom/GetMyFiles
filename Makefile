@@ -45,6 +45,10 @@ ifeq (y,$(PUBLIC_SERVICE))
 CFLAGS += -DPUBLIC_SERVICE
 endif
 
+ifeq (y,$(USE_ANY_HOST))
+CFLAGS += -DUSE_ANY_HOST
+endif
+
 OBJS_L = lib/tcp.o lib/udp.o lib/aes.o
 
 OBJS_S = server.o utils.o http.o urldecode.o getaddr.o

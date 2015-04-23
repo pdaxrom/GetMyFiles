@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
     client.enable_httpd = 1;
     client.priv = NULL;
 
-#if 0
+#ifdef USE_ANY_HOST
     if (argc < 3) {
 	fprintf(stderr, "%s <host> <port> <directory>\n", argv[0]);
 	return 1;

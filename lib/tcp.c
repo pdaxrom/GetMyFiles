@@ -241,6 +241,7 @@ int tcp_close(tcp_channel *u)
 
 tcp_channel *tcp_accept(tcp_channel *u)
 {
+    char errbuf[1024];
     tcp_channel *n = (tcp_channel *)malloc(sizeof(tcp_channel));
     memset(n, 0, sizeof(tcp_channel));
 
@@ -251,7 +252,8 @@ tcp_channel *tcp_accept(tcp_channel *u)
 
     socklen_t l = sizeof(struct sockaddr);
     if ((n->s = accept(u->s, (struct sockaddr *)&n->my_addr, &l)) < 0) {
-	fprintf(stderr, "accept()\n");
+	strerror_r(errno, errbuf, sizeof(errbuf) - 1);
+	fprintf(stderr, "accept() - %s\n", errbuf);
 	free(n);
 	return NULL;
     }
