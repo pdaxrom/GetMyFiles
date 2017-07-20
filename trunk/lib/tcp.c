@@ -252,8 +252,12 @@ tcp_channel *tcp_accept(tcp_channel *u)
 
     socklen_t l = sizeof(struct sockaddr);
     if ((n->s = accept(u->s, (struct sockaddr *)&n->my_addr, &l)) < 0) {
+#ifndef _WIN32
 	strerror_r(errno, errbuf, sizeof(errbuf) - 1);
 	fprintf(stderr, "accept() - %s\n", errbuf);
+#else
+	fprintf(stderr, "accept()\n");
+#endif
 	free(n);
 	return NULL;
     }
